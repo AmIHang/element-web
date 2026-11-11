@@ -19,6 +19,7 @@ export * from "./room/composer/Banner";
 export * from "./room/composer/UploadButton";
 export * from "./room/composer/MessageComposerUrlPreview/index.ts";
 export * from "./room/composer/ReplySuggestionsView";
+export * from "./room/composer/MessagePromptView";
 export * from "./crypto/SasEmoji";
 export * from "./crypto/LegacyCryptoUnsupportedView";
 export * from "./crypto/DeleteKeyStorageView";

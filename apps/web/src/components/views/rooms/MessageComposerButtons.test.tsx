@@ -9,7 +9,7 @@ Please see LICENSE files in the repository root for full details.
 // @vitest-environment happy-dom
 
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "test-utils-rtl";
 import { createTestClient, getRoomContext, mkStubRoom } from "test-utils";
 
@@ -19,6 +19,11 @@ import MessageComposerButtons from "./MessageComposerButtons";
 import { ScopedRoomContextProvider } from "../../../contexts/ScopedRoomContext.tsx";
 import { type RoomContextType } from "../../../contexts/RoomContext.ts";
 import { RoomUploadContextProvider } from "../../../viewmodels/room/RoomUploadViewModel.tsx";
+import PlatformPeg from "../../../PlatformPeg";
+import type BasePlatform from "../../../BasePlatform";
+import type { AgentApi } from "../../../agent/AgentApi";
+import Modal from "../../../Modal";
+import { MessagePromptDialog } from "../dialogs/MessagePromptDialog";
 
 describe("MessageComposerButtons", () => {
     // @ts-ignore - we're deliberately not implementing the whole interface here, but
@@ -171,6 +176,58 @@ describe("MessageComposerButtons", () => {
                     // "Poll", // should be hidden
                     "Location",
                 ],
+            ]);
+        });
+    });
+    describe("prompt button", () => {
+        const agent = {} as AgentApi;
+
+        beforeEach(() => {
+            vi.spyOn(PlatformPeg, "get").mockReturnValue({ agent } as BasePlatform);
+        });
+
+        afterEach(() => {
+            vi.mocked(PlatformPeg.get).mockRestore();
+        });
+
+        it("is shown next to the upload button on a platform with an agent, and opens the prompt", () => {
+            const createDialog = vi
+                .spyOn(Modal, "createDialog")
+                .mockReturnValue({} as ReturnType<typeof Modal.createDialog>);
+            wrapAndRender(
+                <MessageComposerButtons
+                    {...mockProps}
+                    isMenuOpen={false}
+                    showLocationButton={true}
+                    showPollsButton={true}
+                    showStickersButton={true}
+                />,
+                false,
+            );
+
+            expect(getButtonLabels()).toEqual(["Emoji", "Attachment", "Write a message from a prompt", "More options"]);
+
+            screen.getByRole("button", { name: "Write a message from a prompt" }).click();
+            expect(createDialog).toHaveBeenCalledWith(MessagePromptDialog, expect.objectContaining({ agent }));
+            createDialog.mockRestore();
+        });
+
+        it("is in the menu in narrow mode", () => {
+            wrapAndRender(
+                <MessageComposerButtons
+                    {...mockProps}
+                    isMenuOpen={true}
+                    showLocationButton={false}
+                    showPollsButton={false}
+                    showStickersButton={false}
+                />,
+                true,
+            );
+
+            expect(getButtonLabels()).toEqual([
+                "Emoji",
+                "More options",
+                ["Attachment", "Write a message from a prompt"],
             ]);
         });
     });

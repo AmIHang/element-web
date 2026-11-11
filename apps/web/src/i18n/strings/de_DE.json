@@ -619,6 +619,8 @@
             "title_create": "Link erstellen",
             "title_edit": "Link bearbeiten"
         },
+        "message_prompt_title": "Prompt",
+        "message_prompt_button": "Nachricht aus einem Prompt schreiben",
         "mode_plain": "Formatierung ausblenden",
         "mode_rich_text": "Formatierung anzeigen",
         "no_perms_notice": "Du darfst in diesem Chat nichts schreiben",

@@ -44,6 +44,18 @@
         "state_encryption_enabled": "Experimentelle State-Verschlüsselung aktiviert"
     },
     "composer": {
+        "message_prompt": {
+            "description": "Beschreibe in wenigen Worten, was die Nachricht sagen soll. Der Agent formuliert sie aus und setzt sie ins Nachrichtenfeld, wo du sie vor dem Senden bearbeiten kannst. Dafür werden die letzten Nachrichten dieses Chats an den Anbieter gesendet.",
+            "error_not_connected": "Verbinde Claude oder GitHub Copilot in den Agent-Einstellungen, um Nachrichten aus einem Prompt zu schreiben.",
+            "error_rate_limited": "Der Anbieter ist ausgelastet oder dein Kontingent ist aufgebraucht. Versuche es später erneut.",
+            "error_refused": "Das Modell wollte diese Nachricht nicht schreiben. Versuche es mit einer anderen Formulierung.",
+            "error_unavailable": "Der Anbieter ist nicht erreichbar. Versuche es erneut.",
+            "error_unknown": "Die Nachricht konnte nicht geschrieben werden. Versuche es erneut.",
+            "generating": "Wird geschrieben…",
+            "label": "Was soll die Nachricht sagen?",
+            "placeholder": "Zum Beispiel: Schreib Phillip, dass er endlich die Bugs fixen soll",
+            "submit": "Nachricht schreiben"
+        },
         "reply_suggestions": {
             "label": "Antwortvorschläge"
         },

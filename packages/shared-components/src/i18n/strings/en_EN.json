@@ -47,6 +47,18 @@
         "state_encryption_enabled": "Experimental state encryption enabled"
     },
     "composer": {
+        "message_prompt": {
+            "description": "Describe in a few words what the message should say. The agent writes it out and puts it into the message field, where you can edit it before sending. The latest messages of this chat are sent to the provider for this.",
+            "error_not_connected": "Connect Claude or GitHub Copilot in the Agent settings to write messages from a prompt.",
+            "error_rate_limited": "The provider is busy or your allowance is used up. Try again later.",
+            "error_refused": "The model declined to write this message. Try wording it differently.",
+            "error_unavailable": "The provider could not be reached. Try again.",
+            "error_unknown": "The message could not be written. Try again.",
+            "generating": "Writing…",
+            "label": "What should the message say?",
+            "placeholder": "For example: Tell Phillip he should finally fix the bugs",
+            "submit": "Write message"
+        },
         "reply_suggestions": {
             "label": "Reply suggestions"
         },
