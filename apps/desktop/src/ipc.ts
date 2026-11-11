@@ -19,6 +19,7 @@ import {
     connectClaudeAccount,
     connectCopilotAccount,
     disconnectAgent,
+    generateAgentMessage,
     generateAgentReply,
     generateAgentSuggestions,
     generateAgentSummary,
@@ -265,6 +266,8 @@ ipcMain.on("ipcCall", async function (_ev: IpcMainEvent, payload) {
             break;
         case "agentGenerateSummary":
             ret = await generateAgentSummary(args[0]);
+        case "agentGenerateMessage":
+            ret = await generateAgentMessage(args[0]);
             break;
 
         case "clearStorage":

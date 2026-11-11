@@ -41,6 +41,7 @@ describe("AgentRoomStore", () => {
             generateReply: vi.fn(),
             generateSuggestions: vi.fn(),
             generateSummary: vi.fn(),
+            generateMessage: vi.fn(),
         };
         store = new AgentRoomStore();
     });

@@ -91,6 +91,7 @@ const agent = vi.hoisted(() => ({
     openContactInstructions: vi.fn(),
     generateAgentReply: vi.fn(),
     generateAgentSuggestions: vi.fn(),
+    generateAgentMessage: vi.fn(),
 }));
 vi.mock("./agent.js", () => agent);
 
@@ -408,6 +409,11 @@ describe("ipc agent commands", () => {
             "agentGenerateSuggestions",
             agent.generateAgentSuggestions,
             [{ ownName: "Alice", chatName: "Bob", isDirect: true, messages: [] }],
+        ],
+        [
+            "agentGenerateMessage",
+            agent.generateAgentMessage,
+            [{ ownName: "Alice", chatName: "Bob", isDirect: true, instruction: "Say hi", messages: [] }],
         ],
     ])("routes %s to the agent and replies with its result", async (name, handler, args) => {
         // A plain value works for the synchronous and the awaited handlers alike

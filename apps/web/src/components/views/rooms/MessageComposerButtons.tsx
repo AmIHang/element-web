@@ -23,6 +23,7 @@ import {
     StickerIcon,
     TextFormattingIcon,
 } from "@vector-im/compound-design-tokens/assets/web/icons";
+import AiIcon from "@vector-im/compound-design-tokens/assets/web/icons/ai";
 import { UploadButton, useViewModel } from "@element-hq/web-shared-components";
 
 import { _t } from "../../../languageHandler";
@@ -43,7 +44,10 @@ import { filterBoolean } from "../../../utils/arrays";
 import { useSettingValue } from "../../../hooks/useSettings";
 import AccessibleButton, { type ButtonEvent } from "../elements/AccessibleButton";
 import { useScopedRoomContext } from "../../../contexts/ScopedRoomContext.tsx";
+import { type TimelineRenderingType } from "../../../contexts/RoomContext";
 import { useRoomUploadViewModel } from "../../../viewmodels/room/RoomUploadViewModel.tsx";
+import PlatformPeg from "../../../PlatformPeg";
+import { MessagePromptDialog } from "../dialogs/MessagePromptDialog";
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -66,7 +70,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
     const matrixClient = useContext(MatrixClientContext);
     const roomUploadVM = useRoomUploadViewModel();
     const roomUploadSnapshot = useViewModel(roomUploadVM);
-    const { room, narrow } = useScopedRoomContext("room", "narrow");
+    const { room, narrow, timelineRenderingType } = useScopedRoomContext("room", "narrow", "timelineRenderingType");
 
     const isWysiwygLabEnabled = useSettingValue("feature_wysiwyg_composer");
 
@@ -98,6 +102,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
                     key={type}
                 />
             )),
+            promptButton(matrixClient, room, timelineRenderingType),
             showStickersButton(props),
             voiceRecordingButton(props, narrow),
             props.showPollsButton ? pollButton(room, props.relation) : null,
@@ -115,6 +120,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
                 emojiButton(props)
             ),
             <UploadButton key="upload" vm={roomUploadVM} />,
+            promptButton(matrixClient, room, timelineRenderingType),
         ];
         moreButtons = [
             showStickersButton(props),
@@ -169,6 +175,30 @@ function emojiButton(props: IProps): ReactElement {
             menuPosition={props.menuPosition}
             className="mx_MessageComposer_button"
         />
+    );
+}
+
+/**
+ * The button that opens a prompt to have the agent of the platform write a message, on platforms that have one.
+ */
+function promptButton(
+    matrixClient: MatrixClient,
+    room: Room,
+    timelineRenderingType: TimelineRenderingType,
+): ReactElement | null {
+    const agent = PlatformPeg.get()?.agent;
+    if (!agent) return null;
+    return (
+        <CollapsibleButton
+            key="message_prompt"
+            className="mx_MessageComposer_button"
+            onClick={() => {
+                Modal.createDialog(MessagePromptDialog, { client: matrixClient, room, agent, timelineRenderingType });
+            }}
+            title={_t("composer|message_prompt_button")}
+        >
+            <AiIcon />
+        </CollapsibleButton>
     );
 }
 

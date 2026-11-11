@@ -1,0 +1,213 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MessagePromptView > Storybook snapshots > renders an empty prompt 1`] = `
+<div>
+  <div
+    class="Flex-module_flex MessagePromptView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-3x); --mx-flex-wrap: nowrap;"
+  >
+    <label
+      class="MessagePromptView-module_label"
+      for="mx_MessagePrompt_text"
+    >
+      What should the message say?
+    </label>
+    <p
+      class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31 MessagePromptView-module_description"
+    >
+      Describe in a few words what the message should say. The agent writes it out and puts it into the message field, where you can edit it before sending. The latest messages of this chat are sent to the provider for this.
+    </p>
+    <textarea
+      aria-invalid="false"
+      class="MessagePromptView-module_control"
+      id="mx_MessagePrompt_text"
+      maxlength="2000"
+      placeholder="For example: Tell Phillip he should finally fix the bugs"
+      rows="4"
+    />
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        class="_button_1nw83_8"
+        data-kind="secondary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        Cancel
+      </button>
+      <button
+        aria-disabled="true"
+        class="_button_1nw83_8 _has-icon_1nw83_60"
+        data-kind="primary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9.5 2 11 6.5 15.5 8 11 9.5 9.5 14 8 9.5 3.5 8 8 6.5zm9.5 9 1 3 3 1-3 1-1 3-1-3-3-1 3-1zm-7 6 .75 2.25L15 20l-2.25.75L12 23l-.75-2.25L9 20l2.25-.75z"
+          />
+        </svg>
+        Write message
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`MessagePromptView > Storybook snapshots > renders an error 1`] = `
+<div>
+  <div
+    class="Flex-module_flex MessagePromptView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-3x); --mx-flex-wrap: nowrap;"
+  >
+    <label
+      class="MessagePromptView-module_label"
+      for="mx_MessagePrompt_text"
+    >
+      What should the message say?
+    </label>
+    <p
+      class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31 MessagePromptView-module_description"
+    >
+      Describe in a few words what the message should say. The agent writes it out and puts it into the message field, where you can edit it before sending. The latest messages of this chat are sent to the provider for this.
+    </p>
+    <textarea
+      aria-describedby="mx_MessagePrompt_error"
+      aria-invalid="true"
+      class="MessagePromptView-module_control"
+      id="mx_MessagePrompt_text"
+      maxlength="2000"
+      placeholder="For example: Tell Phillip he should finally fix the bugs"
+      rows="4"
+    >
+      Tell Phillip he should finally fix the bugs
+    </textarea>
+    <p
+      class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31 MessagePromptView-module_error"
+      id="mx_MessagePrompt_error"
+      role="alert"
+    >
+      Connect Claude or GitHub Copilot in the Agent settings to write messages from a prompt.
+    </p>
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        class="_button_1nw83_8"
+        data-kind="secondary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        Cancel
+      </button>
+      <button
+        aria-disabled="false"
+        class="_button_1nw83_8 _has-icon_1nw83_60"
+        data-kind="primary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9.5 2 11 6.5 15.5 8 11 9.5 9.5 14 8 9.5 3.5 8 8 6.5zm9.5 9 1 3 3 1-3 1-1 3-1-3-3-1 3-1zm-7 6 .75 2.25L15 20l-2.25.75L12 23l-.75-2.25L9 20l2.25-.75z"
+          />
+        </svg>
+        Write message
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`MessagePromptView > Storybook snapshots > renders while the message is written 1`] = `
+<div>
+  <div
+    class="Flex-module_flex MessagePromptView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-3x); --mx-flex-wrap: nowrap;"
+  >
+    <label
+      class="MessagePromptView-module_label"
+      for="mx_MessagePrompt_text"
+    >
+      What should the message say?
+    </label>
+    <p
+      class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31 MessagePromptView-module_description"
+    >
+      Describe in a few words what the message should say. The agent writes it out and puts it into the message field, where you can edit it before sending. The latest messages of this chat are sent to the provider for this.
+    </p>
+    <textarea
+      aria-invalid="false"
+      class="MessagePromptView-module_control"
+      disabled=""
+      id="mx_MessagePrompt_text"
+      maxlength="2000"
+      placeholder="For example: Tell Phillip he should finally fix the bugs"
+      rows="4"
+    >
+      Tell Phillip he should finally fix the bugs
+    </textarea>
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        class="_button_1nw83_8"
+        data-kind="secondary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        Cancel
+      </button>
+      <button
+        aria-disabled="true"
+        class="_button_1nw83_8 _has-icon_1nw83_60"
+        data-kind="primary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        <svg
+          aria-hidden="true"
+          class="_icon_1855a_18"
+          fill="currentColor"
+          height="20"
+          style="width: 20px; height: 20px;"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            clip-rule="evenodd"
+            d="M12 4.031a8 8 0 1 0 8 8 1 1 0 0 1 2 0c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10a1 1 0 1 1 0 2"
+            fill-rule="evenodd"
+          />
+        </svg>
+        Writing…
+      </button>
+    </div>
+  </div>
+</div>
+`;
