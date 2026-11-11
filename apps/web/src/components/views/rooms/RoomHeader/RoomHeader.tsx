@@ -44,6 +44,7 @@ import { RoomKnocksBar } from "../RoomKnocksBar.tsx";
 import { isVideoRoom as calcIsVideoRoom } from "../../../../utils/video-rooms.ts";
 import { notificationLevelToIndicator } from "../../../../utils/notifications.ts";
 import { CallGuestLinkButton } from "./CallGuestLinkButton.tsx";
+import { ChatSummaryButton } from "./ChatSummaryButton.tsx";
 import { type ButtonEvent } from "../../elements/AccessibleButton.tsx";
 import WithPresenceIndicator, { useDmMember } from "../../avatars/WithPresenceIndicator.tsx";
 import { type IOOBData } from "../../../../stores/ThreepidInviteStore.ts";
@@ -118,6 +119,8 @@ function RoomHeaderButtons({ room, extraButtons }: { room: Room; extraButtons?: 
             {!isVideoRoom && callControlButton}
 
             {showChatButton && <VideoRoomChatButton room={room} />}
+
+            <ChatSummaryButton room={room} />
 
             <Tooltip label={_t("common|threads")}>
                 <IconButton

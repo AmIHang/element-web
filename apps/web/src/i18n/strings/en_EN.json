@@ -1986,6 +1986,10 @@
         "agent_replies": "The agent replies in this chat",
         "banned_by": "You were banned by %(memberName)s",
         "banned_from_room_by": "You were banned from %(roomName)s by %(memberName)s",
+        "chat_summary": {
+            "button": "Summarise latest messages",
+            "title": "Summary of %(roomName)s"
+        },
         "context_menu": {
             "copy_link": "Copy link",
             "favourite": "Favourite",
