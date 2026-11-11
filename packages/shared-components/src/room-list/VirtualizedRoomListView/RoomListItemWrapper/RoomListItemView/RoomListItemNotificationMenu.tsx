@@ -52,7 +52,6 @@ export function RoomListItemNotificationMenu({ vm }: RoomListItemNotificationMen
     const replyMarkings: { marking: AgentReplyMarking; label: string }[] = [
         { marking: "notice", label: _t("room_list|agent_reply_marking_notice") },
         { marking: "marker", label: _t("room_list|agent_reply_marking_marker") },
-        { marking: "none", label: _t("room_list|agent_reply_marking_none") },
     ];
 
     return (

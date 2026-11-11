@@ -697,18 +697,30 @@ describe("agent", () => {
             expect(getAgentReplyMarkings("@alice:example.org")).toEqual({ ok: true, data: {} });
 
             setAgentReplyMarking("@alice:example.org", "!a:example.org", "marker");
-            setAgentReplyMarking("@alice:example.org", "!b:example.org", "none");
-            setAgentReplyMarking("@bob:example.org", "!c:example.org", "none");
+            setAgentReplyMarking("@bob:example.org", "!c:example.org", "marker");
 
             expect(getAgentReplyMarkings("@alice:example.org")).toEqual({
                 ok: true,
-                data: { "!a:example.org": "marker", "!b:example.org": "none" },
+                data: { "!a:example.org": "marker" },
             });
-            expect(getAgentReplyMarkings("@bob:example.org")).toEqual({ ok: true, data: { "!c:example.org": "none" } });
+            expect(getAgentReplyMarkings("@bob:example.org")).toEqual({ ok: true, data: { "!c:example.org": "marker" } });
+        });
+
+        it("gives rooms stored without any marker by an older version the hidden marker", () => {
+            storeData.replyMarkings = { "@alice:example.org": { "!a:example.org": "none" } };
+
+            expect(getAgentReplyMarkings("@alice:example.org")).toEqual({
+                ok: true,
+                data: { "!a:example.org": "marker" },
+            });
+            expect(setAgentReplyMarking("@alice:example.org", "!b:example.org", "marker")).toEqual({
+                ok: true,
+                data: { "!a:example.org": "marker", "!b:example.org": "marker" },
+            });
         });
 
         it("forgets rooms set back to the default", () => {
-            setAgentReplyMarking("@alice:example.org", "!a:example.org", "none");
+            setAgentReplyMarking("@alice:example.org", "!a:example.org", "marker");
 
             expect(setAgentReplyMarking("@alice:example.org", "!a:example.org", "notice")).toEqual({
                 ok: true,
@@ -718,8 +730,9 @@ describe("agent", () => {
         });
 
         it.each([
-            [undefined, "!a:example.org", "none"],
-            ["@alice:example.org", "", "none"],
+            [undefined, "!a:example.org", "marker"],
+            ["@alice:example.org", "", "marker"],
+            ["@alice:example.org", "!a:example.org", "none"],
             ["@alice:example.org", "!a:example.org", "hidden"],
             ["@alice:example.org", "!a:example.org", undefined],
         ])("refuses invalid arguments %s %s %s", (userId, roomId, marking) => {

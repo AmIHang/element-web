@@ -127,11 +127,10 @@ describe("<RoomListItemNotificationMenu />", () => {
         it.each([
             ["notice", "Mark as AI reply"],
             ["marker", "Hidden marker only"],
-            ["none", "Not marked"],
         ] as const)("should mark how replies are marked: %s", (agentReplyMarking, selected) => {
             renderMenu(RoomNotifState.AllMessages, { canUseAgent: true, isAgent: true, agentReplyMarking });
 
-            for (const label of ["Mark as AI reply", "Hidden marker only", "Not marked"]) {
+            for (const label of ["Mark as AI reply", "Hidden marker only"]) {
                 expect(screen.getByRole("menuitem", { name: label })).toHaveAttribute(
                     "aria-selected",
                     String(label === selected),
@@ -142,7 +141,6 @@ describe("<RoomListItemNotificationMenu />", () => {
         it.each([
             ["Mark as AI reply", "notice"],
             ["Hidden marker only", "marker"],
-            ["Not marked", "none"],
         ])("should call onSetAgentReplyMarking when %s is selected", async (label, marking) => {
             const user = userEvent.setup();
             renderMenu(RoomNotifState.AllMessages, { canUseAgent: true, isAgent: true });

@@ -48,7 +48,8 @@ export const AGENT_REPLY_MARKER = "io.element.pilot.agent";
  * - `notice`: as a notice, which clients show as automated and other agents and bots never answer
  * - `marker`: as a normal message with the hidden {@link AGENT_REPLY_MARKER}, which keeps other agents of
  *   Element Pilot from answering it
- * - `none`: as a normal message, indistinguishable from one the user wrote
+ *
+ * A reply is always marked one way or the other, so it can never be taken for a message the user wrote.
  *
  * Only new messages are answered: those sent before the client started are left alone. Nor is a chat the user has
  * open in front of them, since they can answer themselves (see {@link AgentReplyListener.isOpenByUser}).
@@ -194,8 +195,6 @@ export class AgentReplyListener {
         switch (AgentRoomStore.instance.getReplyMarking(roomId)) {
             case "marker":
                 return { msgtype: MsgType.Text, body, [AGENT_REPLY_MARKER]: true } as RoomMessageEventContent;
-            case "none":
-                return { msgtype: MsgType.Text, body };
             default:
                 return { msgtype: MsgType.Notice, body };
         }

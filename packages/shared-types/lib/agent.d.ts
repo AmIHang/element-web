@@ -146,9 +146,8 @@ export interface AgentContactInstructions {
  * - `notice`: sent as a notice, which Element shows greyed out and agents don't answer.
  * - `marker`: sent as a normal message with a hidden marker in its content, which isn't shown in the chat but keeps
  *   the agents of Element Pilot from answering it.
- * - `none`: sent as a normal message without any marker.
  */
-export type AgentReplyMarking = "notice" | "marker" | "none";
+export type AgentReplyMarking = "notice" | "marker";
 
 /**
  * A model a provider offers.

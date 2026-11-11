@@ -33,7 +33,7 @@ describe("AgentRoomStore", () => {
             listModels: vi.fn(),
             getRooms: vi.fn().mockResolvedValue({ ok: true, data: ["!a:example.org"] }),
             setRoom: vi.fn(async (_userId, roomId, enabled) => ({ ok: true as const, data: enabled ? [roomId] : [] })),
-            getReplyMarkings: vi.fn().mockResolvedValue({ ok: true, data: { "!a:example.org": "none" } }),
+            getReplyMarkings: vi.fn().mockResolvedValue({ ok: true, data: { "!a:example.org": "marker" } }),
             setReplyMarking: vi.fn().mockResolvedValue({ ok: true, data: {} }),
             getContactInstructions: vi.fn(),
             setContactInstructions: vi.fn(),
@@ -124,7 +124,7 @@ describe("AgentRoomStore", () => {
         await store.start(agent, ALICE);
 
         expect(agent.getReplyMarkings).toHaveBeenCalledWith(ALICE);
-        expect(store.getReplyMarking("!a:example.org")).toBe("none");
+        expect(store.getReplyMarking("!a:example.org")).toBe("marker");
         expect(store.getReplyMarking("!b:example.org")).toBe("notice");
     });
 
@@ -158,15 +158,15 @@ describe("AgentRoomStore", () => {
         await store.start(agent, ALICE);
         agent.setReplyMarking.mockResolvedValue({ ok: false, error: "unavailable" });
 
-        await store.setReplyMarking("!a:example.org", "marker");
+        await store.setReplyMarking("!a:example.org", "notice");
 
-        expect(store.getReplyMarking("!a:example.org")).toBe("none");
+        expect(store.getReplyMarking("!a:example.org")).toBe("marker");
     });
 
     it("doesn't save a reply marking that doesn't change anything", async () => {
         await store.start(agent, ALICE);
 
-        await store.setReplyMarking("!a:example.org", "none");
+        await store.setReplyMarking("!a:example.org", "marker");
         await store.setReplyMarking("!b:example.org", "notice");
 
         expect(agent.setReplyMarking).not.toHaveBeenCalled();

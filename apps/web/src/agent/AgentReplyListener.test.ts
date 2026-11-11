@@ -128,7 +128,6 @@ describe("AgentReplyListener", () => {
 
     it.each([
         ["marker", { msgtype: MsgType.Text, body: "Sure", [AGENT_REPLY_MARKER]: true }],
-        ["none", { msgtype: MsgType.Text, body: "Sure" }],
         ["notice", { msgtype: MsgType.Notice, body: "Sure" }],
     ] as const)("sends the reply marked as chosen for the room: %s", async (marking, content) => {
         vi.spyOn(AgentRoomStore.instance, "getReplyMarking").mockReturnValue(marking);

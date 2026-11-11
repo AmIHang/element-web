@@ -555,19 +555,19 @@ describe("RoomListItemViewModel", () => {
             const setReplyMarking = vi.spyOn(AgentRoomStore.instance, "setReplyMarking").mockResolvedValue();
             viewModel = new RoomListItemViewModel({ room, client: matrixClient });
 
-            viewModel.onSetAgentReplyMarking("none");
+            viewModel.onSetAgentReplyMarking("marker");
 
-            expect(setReplyMarking).toHaveBeenCalledWith(room.roomId, "none");
+            expect(setReplyMarking).toHaveBeenCalledWith(room.roomId, "marker");
         });
 
         it("updates when how replies are marked changes", () => {
             const getReplyMarking = vi.spyOn(AgentRoomStore.instance, "getReplyMarking").mockReturnValue("notice");
             viewModel = new RoomListItemViewModel({ room, client: matrixClient });
 
-            getReplyMarking.mockReturnValue("none");
+            getReplyMarking.mockReturnValue("marker");
             AgentRoomStore.instance.emit(AgentRoomStoreEvent.Update);
 
-            expect(viewModel.getSnapshot().agentReplyMarking).toBe("none");
+            expect(viewModel.getSnapshot().agentReplyMarking).toBe("marker");
         });
     });
 

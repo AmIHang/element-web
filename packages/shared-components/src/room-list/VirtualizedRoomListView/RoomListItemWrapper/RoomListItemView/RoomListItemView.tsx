@@ -62,9 +62,8 @@ export interface Section {
  * How the agent's replies in a room show that they are automated:
  * - `notice`: sent as a notice, shown greyed out as an automated message
  * - `marker`: sent as a normal message with a hidden marker that only other agents read
- * - `none`: sent as a normal message, with nothing marking it
  */
-export type AgentReplyMarking = "notice" | "marker" | "none";
+export type AgentReplyMarking = "notice" | "marker";
 
 /**
  * Snapshot for a room list item.

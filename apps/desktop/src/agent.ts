@@ -69,7 +69,7 @@ const DEFAULT_SETTINGS: AgentSettings = { provider: "claude", instructions: "", 
 
 const PROVIDERS: readonly AgentProvider[] = ["claude", "copilot"];
 
-const REPLY_MARKINGS: readonly AgentReplyMarking[] = ["notice", "marker", "none"];
+const REPLY_MARKINGS: readonly AgentReplyMarking[] = ["notice", "marker"];
 
 interface AgentStoreData {
     settings?: AgentSettings;
@@ -83,9 +83,9 @@ interface AgentStoreData {
     rooms?: Record<string, string[]>;
     /**
      * How the agent's replies are marked in each room, by the Matrix user the rooms belong to. Rooms with the
-     * default, `notice`, are left out.
+     * default, `notice`, are left out. Older versions also stored `none`, which sent replies without any marker.
      */
-    replyMarkings?: Record<string, Record<string, AgentReplyMarking>>;
+    replyMarkings?: Record<string, Record<string, string>>;
 }
 
 /**
@@ -531,7 +531,19 @@ export function setAgentRoom(userId: unknown, roomId: unknown, enabled: unknown)
  */
 export function getAgentReplyMarkings(userId: unknown): AgentResult<Record<string, AgentReplyMarking>> {
     if (typeof userId !== "string" || !userId) return failure("invalid_request");
-    return { ok: true, data: getAgentStore().get("replyMarkings")?.[userId] ?? {} };
+    return { ok: true, data: readReplyMarkings(getAgentStore().get("replyMarkings")?.[userId]) };
+}
+
+/**
+ * The stored markings of a user's rooms. Replies are always marked, so a room stored by an older version without
+ * any marker (`none`) gets the hidden marker, which keeps its replies looking like normal messages.
+ */
+function readReplyMarkings(stored: Record<string, string> | undefined): Record<string, AgentReplyMarking> {
+    const markings: Record<string, AgentReplyMarking> = {};
+    for (const [roomId, marking] of Object.entries(stored ?? {})) {
+        if (marking !== "notice") markings[roomId] = "marker";
+    }
+    return markings;
 }
 
 /**
@@ -557,7 +569,7 @@ export function setAgentReplyMarking(
     else userMarkings[roomId] = marking as AgentReplyMarking;
     markings[userId] = userMarkings;
     getAgentStore().set("replyMarkings", markings);
-    return { ok: true, data: userMarkings };
+    return { ok: true, data: readReplyMarkings(userMarkings) };
 }
 
 /**
