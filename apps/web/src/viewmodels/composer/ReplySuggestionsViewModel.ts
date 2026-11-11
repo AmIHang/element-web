@@ -20,10 +20,10 @@ import {
     type ReplySuggestionsViewModel as ReplySuggestionsViewModelInterface,
     type ReplySuggestionsViewSnapshot,
 } from "@element-hq/web-shared-components";
-import type { AgentSuggestionMessage } from "shared-types";
 
 import type { AgentApi } from "../../agent/AgentApi";
 import { AgentRoomStore } from "../../agent/AgentRoomStore";
+import { getChatMessages } from "../../agent/getChatMessages";
 import DMRoomMap from "../../utils/DMRoomMap";
 import defaultDispatcher from "../../dispatcher/dispatcher";
 import { Action } from "../../dispatcher/actions";
@@ -32,9 +32,6 @@ import { TimelineRenderingType } from "../../contexts/RoomContext";
 
 /** How long to wait after a new message, so that several messages in a row get one set of suggestions */
 export const SUGGESTION_DELAY_MS = 1000;
-
-/** How many of the latest messages the agent sees */
-export const HISTORY_LENGTH = 30;
 
 export interface ReplySuggestionsViewModelProps {
     client: MatrixClient;
@@ -166,7 +163,7 @@ export class ReplySuggestionsViewModel
                 chatName: room.name,
                 isDirect: Boolean(partnerId),
                 partnerId,
-                messages: this.getMessages(),
+                messages: getChatMessages(room, myUserId),
             })
             .catch((e) => {
                 logger.warn(`Could not get reply suggestions in ${room.roomId}`, e);
@@ -197,23 +194,5 @@ export class ReplySuggestionsViewModel
             return event;
         }
         return undefined;
-    }
-
-    /** The latest messages of the room with text, oldest first */
-    private getMessages(): AgentSuggestionMessage[] {
-        const myUserId = this.props.client.getSafeUserId();
-        const messages: AgentSuggestionMessage[] = [];
-        for (const event of this.props.room.getLiveTimeline().getEvents()) {
-            if (event.getType() !== EventType.RoomMessage || event.isRedacted()) continue;
-            if (event.isRelation(RelationType.Replace)) continue;
-            const { body } = event.getContent();
-            if (typeof body !== "string" || !body.trim()) continue;
-            messages.push({
-                sender: event.sender?.name ?? event.getSender() ?? "",
-                own: event.getSender() === myUserId,
-                text: body,
-            });
-        }
-        return messages.slice(-HISTORY_LENGTH);
     }
 }

@@ -93,6 +93,7 @@ describe("AgentReplyListener", () => {
             generateReply: vi.fn().mockResolvedValue({ ok: true, data: "Sure, see you tomorrow!" }),
             generateSuggestions: vi.fn(),
             generateSummary: vi.fn(),
+            generateMessage: vi.fn(),
         };
         listener = new AgentReplyListener();
         listener.start(client, agent);
