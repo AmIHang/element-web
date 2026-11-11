@@ -2839,7 +2839,8 @@
             "tokenizer_mode_ngram": "N-Gramm",
             "tokenizer_mode_ngram_description": "Unterstützt alle Sprachen, auch solche ohne Wortgrenzen. Funktioniert auch bei gemischten Sprachen.",
             "tokenizer_mode_substring": "Teilwortsuche",
-            "tokenizer_mode_substring_description": "Findet jeden Teil eines Wortes, etwa „deploy“ in „deployment“ oder Namen in Code. Braucht mehr Speicherplatz."
+            "tokenizer_mode_substring_description": "Findet jeden Teil eines Wortes, etwa „deploy“ in „deployment“ oder Namen in Code. Braucht mehr Speicherplatz.",
+            "tokenizer_mode_substring_warning": "Achtung: Bei der Teilwortsuche werden deine Nachrichten auf diesem PC nicht sicher verschlüsselt gespeichert. Die Nachrichten selbst sind verschlüsselt, aber der Suchindex enthält lesbare Bruchstücke ihres Textes. Wer Zugriff auf deine Dateien auf diesem PC hat, kann Teile deiner Nachrichten lesen."
         },
         "send_read_receipts": "Sende Lesebestätigungen",
         "send_read_receipts_unsupported": "Dein Server unterstützt das Deaktivieren von Lesebestätigungen nicht.",

@@ -16,6 +16,9 @@ import { flushPromises } from "test-utils";
 
 import ConfirmTokenizerChangeDialog from "./ConfirmTokenizerChangeDialog";
 import EventIndexPeg from "../../../../indexing/EventIndexPeg";
+import { TokenizerMode } from "../../../../settings/enums/TokenizerMode";
+
+const SUBSTRING_WARNING = /not stored securely encrypted on this computer/;
 
 describe("<ConfirmTokenizerChangeDialog />", () => {
     afterEach(() => {
@@ -33,5 +36,17 @@ describe("<ConfirmTokenizerChangeDialog />", () => {
 
         expect(EventIndexPeg.deleteEventIndex).toHaveBeenCalled();
         expect(onFinished).toHaveBeenCalledWith(true);
+    });
+
+    it("warns that substring search does not store messages securely encrypted", () => {
+        render(<ConfirmTokenizerChangeDialog tokenizerMode={TokenizerMode.Substring} onFinished={vi.fn()} />);
+
+        expect(screen.getByText(SUBSTRING_WARNING)).toBeInTheDocument();
+    });
+
+    it("does not show the warning for the other modes", () => {
+        render(<ConfirmTokenizerChangeDialog tokenizerMode={TokenizerMode.Ngram} onFinished={vi.fn()} />);
+
+        expect(screen.queryByText(SUBSTRING_WARNING)).not.toBeInTheDocument();
     });
 });

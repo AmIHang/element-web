@@ -148,7 +148,7 @@ export default class ManageEventIndexDialog extends React.Component<IProps, ISta
             const ConfirmTokenizerChangeDialog = (await import("./ConfirmTokenizerChangeDialog")).default;
             const { finished } = Modal.createDialog(
                 ConfirmTokenizerChangeDialog,
-                {},
+                { tokenizerMode: this.state.tokenizerMode },
                 undefined,
                 /* priority = */ false,
                 /* static = */ true,
@@ -247,6 +247,20 @@ export default class ManageEventIndexDialog extends React.Component<IProps, ISta
                         >
                             <Label>{_t("settings|security|tokenizer_mode_language")}</Label>
                             <HelpMessage>{_t("settings|security|tokenizer_mode_language_description")}</HelpMessage>
+                        </InlineField>
+                        <InlineField
+                            name="tokenizerMode"
+                            control={
+                                <RadioControl
+                                    name="tokenizerMode"
+                                    value={TokenizerMode.Substring}
+                                    checked={this.state.tokenizerMode === TokenizerMode.Substring}
+                                    onChange={this.onTokenizerModeChange}
+                                />
+                            }
+                        >
+                            <Label>{_t("settings|security|tokenizer_mode_substring")}</Label>
+                            <HelpMessage>{_t("settings|security|tokenizer_mode_substring_description")}</HelpMessage>
                         </InlineField>
                     </Root>
                 </div>

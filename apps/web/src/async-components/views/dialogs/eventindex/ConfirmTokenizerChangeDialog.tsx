@@ -12,8 +12,11 @@ import Spinner from "../../../../components/views/elements/Spinner";
 import DialogButtons from "../../../../components/views/elements/DialogButtons";
 import { _t } from "../../../../languageHandler";
 import EventIndexPeg from "../../../../indexing/EventIndexPeg";
+import { TokenizerMode } from "../../../../settings/enums/TokenizerMode";
 
 interface IProps {
+    /** The tokenizer mode the user is switching to. */
+    tokenizerMode?: TokenizerMode;
     onFinished: (confirmed?: boolean) => void;
 }
 
@@ -44,7 +47,13 @@ export default class ConfirmTokenizerChangeDialog extends React.Component<IProps
     public render(): React.ReactNode {
         return (
             <BaseDialog onFinished={this.props.onFinished} title={_t("common|are_you_sure")}>
-                {_t("settings|security|tokenizer_mode_change_warning")}
+                <p>{_t("settings|security|tokenizer_mode_change_warning")}</p>
+                {this.props.tokenizerMode === TokenizerMode.Substring && (
+                    // The substring index keeps fragments of the message text unencrypted on disk.
+                    <p className="text-warning">
+                        {_t("settings|security|tokenizer_mode_substring_warning")}
+                    </p>
+                )}
                 {this.state.deleting ? <Spinner /> : <div />}
                 <DialogButtons
                     primaryButton={_t("action|ok")}

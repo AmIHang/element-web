@@ -2890,7 +2890,8 @@
             "tokenizer_mode_ngram": "N-gram",
             "tokenizer_mode_ngram_description": "Supports all languages including those without word boundaries. Works with mixed languages.",
             "tokenizer_mode_substring": "Substring",
-            "tokenizer_mode_substring_description": "Finds any part of a word, such as \"deploy\" in \"deployment\" or names in code. Uses more disk space."
+            "tokenizer_mode_substring_description": "Finds any part of a word, such as \"deploy\" in \"deployment\" or names in code. Uses more disk space.",
+            "tokenizer_mode_substring_warning": "Warning: with substring search, your messages are not stored securely encrypted on this computer. The messages themselves are encrypted, but the search index keeps fragments of their text readable. Anyone with access to your files on this computer can read parts of your messages."
         },
         "send_read_receipts": "Send read receipts",
         "send_read_receipts_unsupported": "Your server doesn't support disabling sending read receipts.",

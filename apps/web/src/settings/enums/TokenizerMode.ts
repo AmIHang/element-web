@@ -8,4 +8,6 @@ Please see LICENSE files in the repository root for full details.
 export enum TokenizerMode {
     Ngram = "ngram",
     Language = "language",
+    /** Finds any part of a word. Element Desktop keeps this index in SQLite instead of Seshat. */
+    Substring = "substring",
 }

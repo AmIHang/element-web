@@ -70,6 +70,7 @@ describe("<ManageEventIndexDialog />", () => {
         expect(screen.getByRole("heading", { name: "Search tokenizer mode" })).toBeInTheDocument();
         expect(screen.getByRole("radio", { name: "N-gram" })).toBeInTheDocument();
         expect(screen.getByRole("radio", { name: "Language-based" })).toBeChecked();
+        expect(screen.getByRole("radio", { name: "Substring" })).not.toBeChecked();
         expect(
             screen.getByText(
                 "Supports all languages including those without word boundaries. Works with mixed languages.",
@@ -82,24 +83,32 @@ describe("<ManageEventIndexDialog />", () => {
         ).toBeInTheDocument();
     });
 
-    it("opens confirm dialog and saves tokenizer mode when confirmed", async () => {
+    it.each([
+        ["N-gram", "ngram"],
+        ["Substring", "substring"],
+    ])("opens confirm dialog and saves the %s tokenizer mode when confirmed", async (label, mode) => {
         setUpDefaults("language");
         const onFinished = vi.fn();
         const setValueSpy = vi.spyOn(SettingsStore, "setValue");
         const initEventIndexSpy = vi.spyOn(EventIndexPeg, "initEventIndex").mockResolvedValue(true);
 
-        vi.spyOn(Modal, "createDialog").mockReturnValue({
+        const createDialogSpy = vi.spyOn(Modal, "createDialog").mockReturnValue({
             finished: Promise.resolve([true]),
         } as any);
 
         render(<ManageEventIndexDialog onFinished={onFinished} />);
         await flushPromises();
 
-        fireEvent.click(screen.getByRole("radio", { name: "N-gram" }));
+        fireEvent.click(screen.getByRole("radio", { name: label }));
         fireEvent.click(screen.getByRole("button", { name: /done/i }));
 
-        await waitFor(() =>
-            expect(setValueSpy).toHaveBeenCalledWith("tokenizerMode", null, SettingLevel.DEVICE, "ngram"),
+        await waitFor(() => expect(setValueSpy).toHaveBeenCalledWith("tokenizerMode", null, SettingLevel.DEVICE, mode));
+        expect(createDialogSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            { tokenizerMode: mode },
+            undefined,
+            false,
+            true,
         );
         expect(initEventIndexSpy).toHaveBeenCalled();
         expect(onFinished).toHaveBeenCalled();
