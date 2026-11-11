@@ -40,6 +40,7 @@ describe("AgentRoomStore", () => {
             openContactInstructions: vi.fn(),
             generateReply: vi.fn(),
             generateSuggestions: vi.fn(),
+            generateSummary: vi.fn(),
         };
         store = new AgentRoomStore();
     });

@@ -536,6 +536,7 @@ export default class ElectronPlatform extends BasePlatform {
         openContactInstructions: (contactId) => this.ipc.call("agentOpenContactInstructions", contactId),
         generateReply: (request) => this.ipc.call("agentGenerateReply", request),
         generateSuggestions: (request) => this.ipc.call("agentGenerateSuggestions", request),
+        generateSummary: (request) => this.ipc.call("agentGenerateSummary", request),
     };
 
     public get agent(): AgentApi {

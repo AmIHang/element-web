@@ -15,12 +15,13 @@ import type {
     AgentSettings,
     AgentStatus,
     AgentSuggestionsRequest,
+    AgentSummaryRequest,
     ClaudeAccount,
     CopilotAccount,
 } from "shared-types";
 
 /**
- * Access to the agent that replies to the direct messages the user marked for it, and suggests replies in any chat. The platform holds the
+ * Access to the agent that replies to the direct messages the user marked for it, and suggests replies and summarises the latest messages in any chat. The platform holds the
  * credentials and the marks and talks to the AI providers; see {@link BasePlatform.agent}.
  */
 export interface AgentApi {
@@ -91,4 +92,6 @@ export interface AgentApi {
     generateReply(request: AgentReplyRequest): Promise<AgentResult<string>>;
     /** Suggest replies the user could send next in a chat */
     generateSuggestions(request: AgentSuggestionsRequest): Promise<AgentResult<string[]>>;
+    /** Summarise the latest messages of a chat, as plain text lines with the points starting with "- " */
+    generateSummary(request: AgentSummaryRequest): Promise<AgentResult<string>>;
 }

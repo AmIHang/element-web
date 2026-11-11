@@ -11,10 +11,12 @@ import os from "node:os";
 import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
 import { app } from "electron";
 import { AuthenticationError, RateLimitError } from "@anthropic-ai/sdk";
-import type { AgentReplyRequest, AgentSuggestionsRequest } from "shared-types";
+import type { AgentReplyRequest, AgentSuggestionsRequest, AgentSummaryRequest } from "shared-types";
 
 import {
     buildSuggestionsSystemPrompt,
+    buildSummaryPrompt,
+    buildSummarySystemPrompt,
     buildSystemPrompt,
     cancelClaudeSignIn,
     cancelCopilotSignIn,
@@ -24,6 +26,7 @@ import {
     disconnectAgent,
     generateAgentReply,
     generateAgentSuggestions,
+    generateAgentSummary,
     getAgentClaudeAccount,
     getAgentDataPath,
     getAgentReplyMarkings,
@@ -170,6 +173,28 @@ const suggestionsRequest: AgentSuggestionsRequest = {
     messages: [
         { sender: "Alice", own: true, text: "Who brings the cake?" },
         { sender: "Bob", own: false, text: "I can do it on Friday" },
+    ],
+};
+
+const summaryRequest: AgentSummaryRequest = {
+    ownName: "Alice",
+    chatName: "Bob",
+    isDirect: true,
+    messages: [
+        {
+            sender: "Bob",
+            own: false,
+            byAgent: false,
+            ts: new Date(2026, 10, 11, 9, 5).getTime(),
+            text: "Release Friday?",
+        },
+        {
+            sender: "Alice",
+            own: true,
+            byAgent: true,
+            ts: new Date(2026, 10, 11, 9, 6).getTime(),
+            text: "Alice will come back to you",
+        },
     ],
 };
 
@@ -703,7 +728,10 @@ describe("agent", () => {
                 ok: true,
                 data: { "!a:example.org": "marker" },
             });
-            expect(getAgentReplyMarkings("@bob:example.org")).toEqual({ ok: true, data: { "!c:example.org": "marker" } });
+            expect(getAgentReplyMarkings("@bob:example.org")).toEqual({
+                ok: true,
+                data: { "!c:example.org": "marker" },
+            });
         });
 
         it("gives rooms stored without any marker by an older version the hidden marker", () => {
@@ -802,6 +830,75 @@ describe("agent", () => {
                 ok: false,
                 error: "not_connected",
             });
+        });
+    });
+
+    describe("summarising a chat", () => {
+        it("asks Claude with the chat as a transcript with times, marking the agent's replies", async () => {
+            storeCredential("claude", "sk-ant-test");
+            setAgentSettings({ instructions: "Be brief." });
+            anthropic.messagesCreate.mockResolvedValue({
+                stop_reason: "end_turn",
+                content: [{ type: "text", text: "- Bob asked about the release" }],
+            });
+
+            expect(await generateAgentSummary(summaryRequest)).toEqual({
+                ok: true,
+                data: "- Bob asked about the release",
+            });
+
+            const params = anthropic.messagesCreate.mock.calls[0][0];
+            expect(params.system).toBe(buildSummarySystemPrompt(summaryRequest, "Be brief."));
+            expect(params.messages).toEqual([{ role: "user", content: buildSummaryPrompt(summaryRequest) }]);
+            expect(params.messages[0].content).toContain(
+                "[2026-11-11 09:05] Bob: Release Friday?\n[2026-11-11 09:06] Alice [agent]: Alice will come back to you",
+            );
+        });
+
+        it("asks Copilot in a session that is deleted afterwards", async () => {
+            storeCredential("copilot", "github_pat_test");
+            setAgentSettings({ provider: "copilot" });
+            copilot.sendAndWait.mockResolvedValue({ data: { content: "- Summary" } });
+
+            expect(await generateAgentSummary(summaryRequest)).toEqual({ ok: true, data: "- Summary" });
+            expect(copilot.createSession.mock.calls[0][0]).toMatchObject({ availableTools: [] });
+            expect(copilot.deleteSession).toHaveBeenCalledWith("session-1");
+        });
+
+        it("is not turned off with the reply suggestions", async () => {
+            storeCredential("claude", "sk-ant-test");
+            setAgentSettings({ replySuggestions: false });
+            anthropic.messagesCreate.mockResolvedValue({
+                stop_reason: "end_turn",
+                content: [{ type: "text", text: "-" }],
+            });
+
+            expect(await generateAgentSummary(summaryRequest)).toMatchObject({ ok: true });
+        });
+
+        it("refuses an invalid request and needs a connected provider", async () => {
+            expect(await generateAgentSummary({ ...summaryRequest, messages: [] })).toMatchObject({
+                error: "invalid_request",
+            });
+            expect(
+                await generateAgentSummary({
+                    ...summaryRequest,
+                    messages: [{ sender: "Bob", own: false, text: "Hi" }],
+                }),
+            ).toMatchObject({ error: "invalid_request" });
+            expect(await generateAgentSummary(summaryRequest)).toMatchObject({ ok: false, error: "not_connected" });
+        });
+
+        it("describes a group chat and adds the user's instructions to the system prompt", () => {
+            const system = buildSummarySystemPrompt(
+                { ...summaryRequest, chatName: "Team", isDirect: false },
+                " Formal ",
+            );
+
+            expect(system).toContain('the group chat "Team"');
+            expect(system).toContain("[agent]");
+            expect(system.endsWith("Formal")).toBe(true);
+            expect(buildSummarySystemPrompt(summaryRequest, "")).toContain("a direct chat with Bob");
         });
     });
 
