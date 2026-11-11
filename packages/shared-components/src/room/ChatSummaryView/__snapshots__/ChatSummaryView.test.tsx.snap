@@ -1,0 +1,258 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ChatSummaryView > Storybook snapshots > renders the failed error 1`] = `
+<div>
+  <div
+    aria-busy="false"
+    class="Flex-module_flex ChatSummaryView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-4x); --mx-flex-wrap: nowrap;"
+  >
+    <p
+      class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 ChatSummaryView-module_error"
+      role="alert"
+    >
+      The summary could not be written. Try again.
+    </p>
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        aria-disabled="false"
+        class="_button_1nw83_8 _has-icon_1nw83_60"
+        data-kind="secondary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18.93 8A8 8 0 1 1 4 12a1 1 0 1 0-2 0c0 5.523 4.477 10 10 10s10-4.477 10-10a10 10 0 0 0-.832-4A10 10 0 0 0 12 2a9.99 9.99 0 0 0-8 3.999V4a1 1 0 0 0-2 0v4a1 1 0 0 0 1 1h4a1 1 0 0 0 0-2H5.755A7.99 7.99 0 0 1 12 4a8 8 0 0 1 6.93 4"
+          />
+        </svg>
+        Summarise again
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ChatSummaryView > Storybook snapshots > renders the loading state 1`] = `
+<div>
+  <div
+    aria-busy="true"
+    class="Flex-module_flex ChatSummaryView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-4x); --mx-flex-wrap: nowrap;"
+  >
+    <div
+      class="Flex-module_flex ChatSummaryView-module_status"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: center; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <svg
+        class="_icon_1855a_18"
+        fill="currentColor"
+        height="1em"
+        style="width: 20px; height: 20px;"
+        viewBox="0 0 24 24"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          clip-rule="evenodd"
+          d="M12 4.031a8 8 0 1 0 8 8 1 1 0 0 1 2 0c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10a1 1 0 1 1 0 2"
+          fill-rule="evenodd"
+        />
+      </svg>
+      <p
+        class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50"
+      >
+        Summarising the last 24 messages…
+      </p>
+    </div>
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        aria-disabled="true"
+        class="_button_1nw83_8 _has-icon_1nw83_60"
+        data-kind="secondary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18.93 8A8 8 0 1 1 4 12a1 1 0 1 0-2 0c0 5.523 4.477 10 10 10s10-4.477 10-10a10 10 0 0 0-.832-4A10 10 0 0 0 12 2a9.99 9.99 0 0 0-8 3.999V4a1 1 0 0 0-2 0v4a1 1 0 0 0 1 1h4a1 1 0 0 0 0-2H5.755A7.99 7.99 0 0 1 12 4a8 8 0 0 1 6.93 4"
+          />
+        </svg>
+        Summarise again
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ChatSummaryView > Storybook snapshots > renders the no messages error 1`] = `
+<div>
+  <div
+    aria-busy="false"
+    class="Flex-module_flex ChatSummaryView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-4x); --mx-flex-wrap: nowrap;"
+  >
+    <p
+      class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 ChatSummaryView-module_error"
+      role="alert"
+    >
+      There are no messages to summarise in this chat yet.
+    </p>
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        aria-disabled="true"
+        class="_button_1nw83_8 _has-icon_1nw83_60"
+        data-kind="secondary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18.93 8A8 8 0 1 1 4 12a1 1 0 1 0-2 0c0 5.523 4.477 10 10 10s10-4.477 10-10a10 10 0 0 0-.832-4A10 10 0 0 0 12 2a9.99 9.99 0 0 0-8 3.999V4a1 1 0 0 0-2 0v4a1 1 0 0 0 1 1h4a1 1 0 0 0 0-2H5.755A7.99 7.99 0 0 1 12 4a8 8 0 0 1 6.93 4"
+          />
+        </svg>
+        Summarise again
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ChatSummaryView > Storybook snapshots > renders the not connected error 1`] = `
+<div>
+  <div
+    aria-busy="false"
+    class="Flex-module_flex ChatSummaryView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-4x); --mx-flex-wrap: nowrap;"
+  >
+    <p
+      class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 ChatSummaryView-module_error"
+      role="alert"
+    >
+      Connect an AI provider in the agent settings to summarise chats.
+    </p>
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        class="_button_1nw83_8"
+        data-kind="primary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        Open agent settings
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ChatSummaryView > Storybook snapshots > renders the summary 1`] = `
+<div>
+  <div
+    aria-busy="false"
+    class="Flex-module_flex ChatSummaryView-module_view"
+    style="--mx-flex-display: flex; --mx-flex-direction: column; --mx-flex-align: stretch; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-4x); --mx-flex-wrap: nowrap;"
+  >
+    <div
+      class="ChatSummaryView-module_summary"
+    >
+      <p
+        class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31 ChatSummaryView-module_caption"
+      >
+        Summary of the last 24 messages
+      </p>
+      <ul
+        class="ChatSummaryView-module_points"
+      >
+        <li>
+          Alice asked whether the release can move to Friday; the agent said Amy would come back to it.
+        </li>
+        <li>
+          Bob shared the CI failure on the Windows build and a link to the log.
+        </li>
+        <li>
+          The agent confirmed that the demo slides are in the shared folder.
+        </li>
+      </ul>
+      <p
+        class="_typography_6v6n8_153 _font-body-md-semibold_6v6n8_55 ChatSummaryView-module_heading"
+      >
+        Open for you
+      </p>
+      <ul
+        class="ChatSummaryView-module_points"
+      >
+        <li>
+          Decide on the release date.
+        </li>
+        <li>
+          Look at the failing Windows build.
+        </li>
+      </ul>
+    </div>
+    <div
+      class="Flex-module_flex"
+      style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: end; --mx-flex-gap: var(--cpd-space-2x); --mx-flex-wrap: nowrap;"
+    >
+      <button
+        aria-disabled="false"
+        class="_button_1nw83_8 _has-icon_1nw83_60"
+        data-kind="secondary"
+        data-size="md"
+        role="button"
+        tabindex="0"
+      >
+        <svg
+          aria-hidden="true"
+          fill="currentColor"
+          height="20"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18.93 8A8 8 0 1 1 4 12a1 1 0 1 0-2 0c0 5.523 4.477 10 10 10s10-4.477 10-10a10 10 0 0 0-.832-4A10 10 0 0 0 12 2a9.99 9.99 0 0 0-8 3.999V4a1 1 0 0 0-2 0v4a1 1 0 0 0 1 1h4a1 1 0 0 0 0-2H5.755A7.99 7.99 0 0 1 12 4a8 8 0 0 1 6.93 4"
+          />
+        </svg>
+        Summarise again
+      </button>
+    </div>
+  </div>
+</div>
+`;

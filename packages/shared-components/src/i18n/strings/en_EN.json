@@ -152,6 +152,21 @@
             "placeholder": "For example: Answer formally and keep it short.",
             "title": "Instructions for the agent"
         },
+        "chat_summary": {
+            "caption": {
+                "one": "Summary of the last message",
+                "other": "Summary of the last %(count)s messages"
+            },
+            "error_failed": "The summary could not be written. Try again.",
+            "error_no_messages": "There are no messages to summarise in this chat yet.",
+            "error_not_connected": "Connect an AI provider in the agent settings to summarise chats.",
+            "loading": {
+                "one": "Summarising the last message…",
+                "other": "Summarising the last %(count)s messages…"
+            },
+            "open_settings": "Open agent settings",
+            "refresh": "Summarise again"
+        },
         "context_menu": {
             "title": "Room options"
         },
