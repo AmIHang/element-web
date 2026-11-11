@@ -49,6 +49,10 @@ export interface ClaudeAccount {
     email?: string;
     /** The name of the organization the account uses, if known */
     organization?: string;
+    /** The ID of the workspace the sign-in is bound to, if known */
+    workspace?: string;
+    /** Whether the Anthropic CLI, which signing in needs, is installed */
+    cliInstalled: boolean;
 }
 
 /**

@@ -524,6 +524,7 @@ describe("agent", () => {
                 signedIn: true,
                 email: "alice@example.org",
                 organization: "Example",
+                cliInstalled: true,
             });
             anthropic.modelsList.mockResolvedValue({ data: [{ id: "claude-opus-5-5", display_name: "Opus 5.5" }] });
         });
@@ -531,7 +532,7 @@ describe("agent", () => {
         it("reports the account the Anthropic CLI is signed in to", async () => {
             expect(await getAgentClaudeAccount()).toEqual({
                 ok: true,
-                data: { signedIn: true, email: "alice@example.org", organization: "Example" },
+                data: { signedIn: true, email: "alice@example.org", organization: "Example", cliInstalled: true },
             });
         });
 
@@ -588,7 +589,7 @@ describe("agent", () => {
 
             expect(await signInClaude()).toEqual({
                 ok: true,
-                data: { signedIn: true, email: "alice@example.org", organization: "Example" },
+                data: { signedIn: true, email: "alice@example.org", organization: "Example", cliInstalled: true },
             });
             expect(storeData.claudeAccount).toBe(true);
         });
