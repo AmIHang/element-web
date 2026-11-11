@@ -21,6 +21,9 @@ const AgentSettingsViewWrapperImpl = ({
     connectCopilotAccount,
     signInCopilot,
     cancelCopilotSignIn,
+    connectClaudeAccount,
+    signInClaude,
+    cancelClaudeSignIn,
     disconnect,
     setModel,
     saveInstructions,
@@ -33,6 +36,9 @@ const AgentSettingsViewWrapperImpl = ({
         connectCopilotAccount,
         signInCopilot,
         cancelCopilotSignIn,
+        connectClaudeAccount,
+        signInClaude,
+        cancelClaudeSignIn,
         disconnect,
         setModel,
         saveInstructions,
@@ -54,6 +60,8 @@ const meta = {
         connected: { claude: false, copilot: false },
         copilotAuth: undefined,
         copilotAccount: undefined,
+        claudeAuth: undefined,
+        claudeAccount: { signedIn: false },
         models: [],
         model: undefined,
         instructions: "",
@@ -64,6 +72,9 @@ const meta = {
         connectCopilotAccount: fn(),
         signInCopilot: fn(),
         cancelCopilotSignIn: fn(),
+        connectClaudeAccount: fn(),
+        signInClaude: fn(),
+        cancelClaudeSignIn: fn(),
         disconnect: fn(),
         setModel: fn(),
         saveInstructions: fn(),
@@ -85,6 +96,37 @@ export const Connected: Story = {
         ],
         model: "claude-sonnet-5-5",
         instructions: "Answer in a friendly, short way.",
+    },
+};
+
+export const ClaudeSignedIn: Story = {
+    args: {
+        claudeAccount: { signedIn: true, email: "alice@example.org", organization: "Example Ltd" },
+    },
+};
+
+export const ClaudeSigningIn: Story = {
+    args: {
+        isBusy: true,
+        isSigningIn: true,
+    },
+};
+
+export const ClaudeConnectedWithAccount: Story = {
+    args: {
+        connected: { claude: true, copilot: false },
+        claudeAuth: "account",
+        claudeAccount: { signedIn: true, email: "alice@example.org", organization: "Example Ltd" },
+        models: [
+            { id: "claude-opus-5-5", name: "Claude Opus 5.5" },
+            { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5" },
+        ],
+    },
+};
+
+export const ClaudeMissingCli: Story = {
+    args: {
+        error: "missing_cli",
     },
 };
 
