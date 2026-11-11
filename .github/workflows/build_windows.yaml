@@ -1,9 +1,11 @@
-# Builds the Element Desktop Windows client from this repository: the web app in apps/web is built and bundled
+# Builds the Element Pilot Windows client from this repository: the web app in apps/web is built and bundled
 # into apps/desktop, rather than fetching an upstream Element Web release. The installers are not code signed.
+# Pushing a pilot/v<version> tag (see `pnpm release:pilot`) also publishes the installers as a GitHub release.
 name: Build Windows client
 on:
     push:
         branches: [develop]
+        tags: ["pilot/v*"]
     workflow_dispatch:
         inputs:
             arch:
@@ -19,7 +21,8 @@ env:
     # pnpm on Windows breaks running scripts after switching to the pnpm version a git dependency pins
     PNPM_CONFIG_PM_ON_FAIL: ignore
 permissions:
-    contents: read
+    # Writing is needed to publish the release for a pilot/v<version> tag
+    contents: write
 jobs:
     build:
         name: Build Windows ${{ inputs.arch || 'x64' }}
@@ -62,15 +65,21 @@ jobs:
               id: layered
               run: |
                   ./scripts/layered.sh
-                  echo "version=$(scripts/get-version-from-git.sh)" >> $GITHUB_OUTPUT
+
+            - name: Work out the Element Pilot version
+              id: version
+              working-directory: apps/desktop
+              run: |
+                  echo "version=$(node scripts/pilot-version.ts)" >> $GITHUB_OUTPUT
+                  echo "upstream=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
 
             - name: Build web app
               working-directory: apps/web
               env:
                   CI_PACKAGE: true
-                  VERSION: ${{ steps.layered.outputs.version }}
+                  VERSION: ${{ steps.version.outputs.version }}
               run: |
-                  cp ../desktop/element.io/release/config.json config.json
+                  cp ../desktop/pilot/config.json config.json
                   pnpm run build
 
             - name: Package web app into webapp.asar
@@ -78,26 +87,42 @@ jobs:
               run: |
                   rm -rf webapp webapp.asar
                   cp -r ../web/webapp webapp
-                  cp element.io/release/config.json webapp/config.json
+                  cp pilot/config.json webapp/config.json
                   pnpm run asar-webapp
 
             - name: Build desktop app
               working-directory: apps/desktop
+              env:
+                  VARIANT_PATH: pilot/build.json
+                  VERSION: ${{ steps.version.outputs.version }}
               run: pnpm run build --publish never --$ARCH -w squirrel msi
 
             - name: Assert installers are present
               working-directory: apps/desktop
               run: |
                   ls dist/win-*unpacked/Element*.exe
-                  ls dist/squirrel-windows*/Element\ Setup*.exe
+                  ls dist/squirrel-windows*/Element*Setup*.exe
                   ls dist/Element*.msi
 
             - name: Upload installers
               uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
               with:
-                  name: element-desktop-win-${{ env.ARCH }}
+                  name: element-pilot-win-${{ env.ARCH }}-${{ steps.version.outputs.version }}
                   path: |
-                      apps/desktop/dist/squirrel-windows*/Element Setup*.exe
+                      apps/desktop/dist/squirrel-windows*/Element*Setup*.exe
                       apps/desktop/dist/Element*.msi
                   if-no-files-found: error
                   retention-days: 14
+
+            - name: Publish the release
+              if: startsWith(github.ref, 'refs/tags/pilot/v')
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  VERSION: ${{ steps.version.outputs.version }}
+                  UPSTREAM: ${{ steps.version.outputs.upstream }}
+              run: |
+                  # Versions with a pre-release label, like 1.3.0-beta.1, are published as pre-releases
+                  prerelease=$([[ "$VERSION" == *-* ]] && echo --prerelease || true)
+                  gh release create "$GITHUB_REF_NAME" $prerelease --title "Element Pilot $VERSION" \
+                      --notes "Based on Element $UPSTREAM." \
+                      apps/desktop/dist/squirrel-windows*/Element*Setup*.exe apps/desktop/dist/Element*.msi

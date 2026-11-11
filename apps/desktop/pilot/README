@@ -19,5 +19,21 @@ are kept when Element Pilot is uninstalled or installed again. There is one per 
 opens them in the app Windows uses for Markdown files. Files that earlier versions kept in
 %LOCALAPPDATA%\Element Pilot\agent\contacts are moved there the first time they are needed.
 
-There is no config.json here: the web app is built with apps/web/config.json, and the build has no update server,
-so it never replaces itself with an official Element build.
+config.json is Element's release config without an update server, so the app never replaces itself with an official
+Element build. The Windows workflow builds the web app with it; local builds use apps/web/config.json.
+
+Element Pilot has its own version, "version" in build.json, apart from Element's version in package.json, which is
+kept as the Element version it is based on. Versions are major.minor.patch, with -beta.N for test releases:
+
+- major: data or settings of earlier versions no longer work, such as a new format for the agent data,
+- minor: new features, and every merge of a newer Element,
+- patch: only fixes.
+
+To release, from apps/desktop:
+
+    pnpm release:pilot <major|minor|patch|1.2.3|1.2.3-beta.1>
+    git push origin HEAD pilot/v<version>
+
+The first sets the version, commits build.json and tags the commit pilot/v<version>. Pushing the tag builds the
+installers and publishes them as a GitHub release. Builds of develop are numbered after the last release,
+<next patch>-dev.<run number>, and only uploaded as workflow artifacts.
