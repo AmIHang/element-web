@@ -10,7 +10,7 @@ Please see LICENSE files in the repository root for full details.
 
 /**
  * The AI providers an agent can use.
- * - `claude`: the Claude API, with an Anthropic API key.
+ * - `claude`: the Claude API, with an Anthropic API key or the Anthropic account of the computer.
  * - `copilot`: GitHub Copilot through the Copilot SDK, with the GitHub account of a Copilot subscriber.
  */
 export type AgentProvider = "claude" | "copilot";
@@ -30,6 +30,25 @@ export interface CopilotAccount {
     signedIn: boolean;
     /** The GitHub login of the account, if known */
     login?: string;
+}
+
+/**
+ * How Claude is connected.
+ * - `account`: with the Anthropic account the Anthropic CLI (`ant`) is signed in to on this computer.
+ * - `key`: with an Anthropic API key stored by Element.
+ */
+export type ClaudeAuth = "account" | "key";
+
+/**
+ * The Anthropic account the Anthropic CLI is signed in to on this computer.
+ */
+export interface ClaudeAccount {
+    /** Whether the Anthropic CLI is signed in to an account on this computer */
+    signedIn: boolean;
+    /** The email address of the account, if known */
+    email?: string;
+    /** The name of the organization the account uses, if known */
+    organization?: string;
 }
 
 /**
@@ -54,6 +73,8 @@ export interface AgentStatus extends AgentSettings {
     connected: Record<AgentProvider, boolean>;
     /** How Copilot is connected, if it is */
     copilotAuth?: CopilotAuth;
+    /** How Claude is connected, if it is */
+    claudeAuth?: ClaudeAuth;
 }
 
 /**
@@ -144,9 +165,11 @@ export interface AgentModel {
  * - `unavailable`: the provider could not be reached or failed.
  * - `invalid_request`: the command was called with invalid arguments.
  * - `cancelled`: the user cancelled the sign-in.
+ * - `missing_cli`: signing in needs a command line tool that is not installed, such as the Anthropic CLI.
  */
 export type AgentErrorCode =
     | "cancelled"
+    | "missing_cli"
     | "not_connected"
     | "invalid_credential"
     | "rate_limited"

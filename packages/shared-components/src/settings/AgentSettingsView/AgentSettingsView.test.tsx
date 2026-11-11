@@ -16,6 +16,10 @@ import * as stories from "./AgentSettingsView.stories";
 const {
     NotConnected,
     Connected,
+    ClaudeSignedIn,
+    ClaudeSigningIn,
+    ClaudeConnectedWithAccount,
+    ClaudeMissingCli,
     Copilot,
     CopilotSignedIn,
     CopilotSigningIn,
@@ -32,6 +36,9 @@ describe("<AgentSettingsView />", () => {
             "connectCopilotAccount",
             "signInCopilot",
             "cancelCopilotSignIn",
+            "connectClaudeAccount",
+            "signInClaude",
+            "cancelClaudeSignIn",
             "disconnect",
             "setModel",
             "saveInstructions",
@@ -52,6 +59,59 @@ describe("<AgentSettingsView />", () => {
         expect(screen.getByRole("radio", { name: "Claude" })).toBeChecked();
         expect(screen.getByLabelText("Anthropic API key")).toBeInTheDocument();
         expect(screen.queryByLabelText("Model")).not.toBeInTheDocument();
+    });
+
+    it("offers to sign in to Anthropic when the Anthropic CLI is not signed in", async () => {
+        const user = userEvent.setup();
+        render(<NotConnected />);
+        expect(screen.getByText("Or use an API key")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: "Sign in with Anthropic" }));
+
+        expect(NotConnected.args.signInClaude).toHaveBeenCalled();
+    });
+
+    it("offers the Anthropic account the Anthropic CLI is signed in to on this computer", async () => {
+        const user = userEvent.setup();
+        render(<ClaudeSignedIn />);
+        expect(
+            screen.getByText("The Anthropic CLI on this computer is signed in as alice@example.org (Example Ltd)."),
+        ).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: "Use this account" }));
+
+        expect(ClaudeSignedIn.args.connectClaudeAccount).toHaveBeenCalled();
+    });
+
+    it("lets the sign-in to Anthropic be cancelled while it continues in the browser", async () => {
+        const user = userEvent.setup();
+        render(<ClaudeSigningIn />);
+        expect(screen.getByText("Continue signing in to Anthropic in your browser…")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+        expect(ClaudeSigningIn.args.cancelClaudeSignIn).toHaveBeenCalled();
+    });
+
+    it("shows the account Claude is connected with", () => {
+        render(<ClaudeConnectedWithAccount />);
+        expect(screen.getByText("Connected to Claude as alice@example.org (Example Ltd)")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Anthropic API key")).not.toBeInTheDocument();
+        expect(screen.getByLabelText("Model")).toBeInTheDocument();
+    });
+
+    it("shows the account by what is known of it", () => {
+        render(<ClaudeSignedIn claudeAccount={{ signedIn: true, organization: "Example Ltd" }} />);
+        expect(screen.getByText("The Anthropic CLI on this computer is signed in as Example Ltd.")).toBeInTheDocument();
+        render(<ClaudeSignedIn claudeAccount={{ signedIn: true }} />);
+        expect(screen.getByText("The Anthropic CLI on this computer is signed in.")).toBeInTheDocument();
+    });
+
+    it("explains that signing in needs the Anthropic CLI", () => {
+        render(<ClaudeMissingCli />);
+        expect(
+            screen.getByText("Signing in needs the Anthropic CLI (ant). Install it, then try again."),
+        ).toBeInTheDocument();
     });
 
     it("offers to sign in to GitHub, or a GitHub token, when Copilot is selected", async () => {

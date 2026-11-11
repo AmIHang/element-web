@@ -15,6 +15,7 @@ import type {
     AgentSettings,
     AgentStatus,
     AgentSuggestionsRequest,
+    ClaudeAccount,
     CopilotAccount,
 } from "shared-types";
 
@@ -29,7 +30,7 @@ export interface AgentApi {
     setSettings(changes: Partial<AgentSettings>): Promise<AgentResult<AgentSettings>>;
     /** Check a credential with its provider and store it */
     connect(provider: AgentProvider, credential: string): Promise<AgentResult<void>>;
-    /** Forget the credential of a provider, or stop using the account of the computer for Copilot */
+    /** Forget the credential of a provider, or stop using the account of the computer */
     disconnect(provider: AgentProvider): Promise<AgentResult<void>>;
     /** Get the GitHub account Copilot is signed in to on this computer */
     getCopilotAccount(): Promise<AgentResult<CopilotAccount>>;
@@ -42,6 +43,17 @@ export interface AgentApi {
     signInCopilot(): Promise<AgentResult<CopilotAccount>>;
     /** Stop the sign-in in progress, which then fails with `cancelled` */
     cancelCopilotSignIn(): Promise<AgentResult<void>>;
+    /** Get the Anthropic account the Anthropic CLI is signed in to on this computer */
+    getClaudeAccount(): Promise<AgentResult<ClaudeAccount>>;
+    /** Connect Claude with the Anthropic account the Anthropic CLI is signed in to on this computer */
+    connectClaudeAccount(): Promise<AgentResult<void>>;
+    /**
+     * Sign in to Anthropic in the browser with the Anthropic CLI, and connect Claude with that account.
+     * @returns the account that was signed in
+     */
+    signInClaude(): Promise<AgentResult<ClaudeAccount>>;
+    /** Stop the sign-in to Anthropic in progress, which then fails with `cancelled` */
+    cancelClaudeSignIn(): Promise<AgentResult<void>>;
     /** List the models a connected provider offers */
     listModels(provider: AgentProvider): Promise<AgentResult<AgentModel[]>>;
     /** Get the rooms the agent replies in, for a Matrix user */

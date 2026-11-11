@@ -8,7 +8,6 @@
 import React, { type JSX, useEffect, useState } from "react";
 import {
     Button,
-    ErrorMessage,
     Field,
     HelpMessage,
     InlineField,
@@ -27,7 +26,8 @@ import { Flex } from "../../core/utils/Flex";
 import styles from "./AgentSettingsView.module.css";
 
 /**
- * The AI providers the agent can use: Claude with an Anthropic API key, or GitHub Copilot with a GitHub account.
+ * The AI providers the agent can use: Claude with an Anthropic account or API key, or GitHub Copilot with a GitHub
+ * account.
  */
 export type AgentSettingsProvider = "claude" | "copilot";
 
@@ -49,13 +49,33 @@ export interface AgentSettingsCopilotAccount {
 }
 
 /**
+ * How Claude is connected.
+ * - `account`: with the Anthropic account the Anthropic CLI is signed in to on this computer.
+ * - `key`: with an Anthropic API key.
+ */
+export type AgentSettingsClaudeAuth = "account" | "key";
+
+/**
+ * The Anthropic account the Anthropic CLI is signed in to on this computer.
+ */
+export interface AgentSettingsClaudeAccount {
+    /** Whether the Anthropic CLI is signed in to an account on this computer */
+    signedIn: boolean;
+    /** The email address of the account, if known */
+    email?: string;
+    /** The name of the organization the account uses, if known */
+    organization?: string;
+}
+
+/**
  * Why the last action failed.
  * - `invalid_credential`: the provider rejected the key or token.
  * - `rate_limited`: the provider asks to slow down, or the plan's allowance is used up.
  * - `unavailable`: the provider could not be reached.
+ * - `missing_cli`: signing in to Anthropic needs the Anthropic CLI, which is not installed.
  * - `unknown`: anything else.
  */
-export type AgentSettingsError = "invalid_credential" | "rate_limited" | "unavailable" | "unknown";
+export type AgentSettingsError = "invalid_credential" | "rate_limited" | "unavailable" | "missing_cli" | "unknown";
 
 /**
  * A model the selected provider offers.
@@ -79,7 +99,11 @@ export interface AgentSettingsViewSnapshot {
     copilotAuth?: AgentSettingsCopilotAuth;
     /** The GitHub account Copilot is signed in to on this computer, once it is known */
     copilotAccount?: AgentSettingsCopilotAccount;
-    /** Whether the user is signing in to GitHub in the browser */
+    /** How Claude is connected, if it is */
+    claudeAuth?: AgentSettingsClaudeAuth;
+    /** The Anthropic account the Anthropic CLI is signed in to on this computer, once it is known */
+    claudeAccount?: AgentSettingsClaudeAccount;
+    /** Whether the user is signing in to the selected provider in the browser */
     isSigningIn: boolean;
     /** The models of the selected provider; empty while it is not connected */
     models: AgentSettingsModel[];
@@ -104,6 +128,12 @@ export interface AgentSettingsViewActions {
     signInCopilot: () => void;
     /** Stop signing in to GitHub */
     cancelCopilotSignIn: () => void;
+    /** Connect Claude with the Anthropic account the Anthropic CLI is signed in to on this computer */
+    connectClaudeAccount: () => void;
+    /** Sign in to Anthropic in the browser with the Anthropic CLI and connect Claude with that account */
+    signInClaude: () => void;
+    /** Stop signing in to Anthropic */
+    cancelClaudeSignIn: () => void;
     /** Disconnect the selected provider */
     disconnect: () => void;
     /** Choose a model of the selected provider, or "" for its default */
@@ -124,11 +154,70 @@ export interface AgentSettingsViewProps {
     vm: AgentSettingsViewModel;
 }
 
+interface AccountControlsProps {
+    /** Whether the user is signing in in the browser */
+    isSigningIn: boolean;
+    /** Whether an action is in progress */
+    isBusy: boolean;
+    /** What to show while signing in */
+    signingInText: string;
+    /** What to show about the account the computer is signed in to, or undefined if it isn't */
+    signedInText?: string;
+    /** What to show before signing in */
+    signInDescription: string;
+    /** The label of the button that signs in */
+    signInLabel: string;
+    /** The label of the button that uses the account the computer is signed in to */
+    useAccountLabel: string;
+    onUseAccount: () => void;
+    onSignIn: () => void;
+    onCancel: () => void;
+}
+
+/**
+ * The controls to connect a provider with the account of the computer: use it if it is signed in, sign in in the
+ * browser if not, and cancel while signing in.
+ */
+function AccountControls(props: Readonly<AccountControlsProps>): JSX.Element {
+    const { translate: _t } = useI18n();
+    let text: string;
+    let button: JSX.Element;
+    if (props.isSigningIn) {
+        text = props.signingInText;
+        button = (
+            <Button kind="secondary" size="md" onClick={props.onCancel}>
+                {_t("action|cancel")}
+            </Button>
+        );
+    } else if (props.signedInText) {
+        text = props.signedInText;
+        button = (
+            <Button kind="primary" size="md" disabled={props.isBusy} onClick={props.onUseAccount}>
+                {props.useAccountLabel}
+            </Button>
+        );
+    } else {
+        text = props.signInDescription;
+        button = (
+            <Button kind="primary" size="md" disabled={props.isBusy} onClick={props.onSignIn}>
+                {props.signInLabel}
+            </Button>
+        );
+    }
+    return (
+        <Flex align="center" justify="space-between" gap="var(--cpd-space-4x)">
+            <Text size="md">{text}</Text>
+            {button}
+        </Flex>
+    );
+}
+
 /**
  * Settings of the agent that replies to the direct messages set to "Agent": which AI provider it uses, how the
  * provider is connected, the model, the user's own instructions and whether it suggests replies in every chat.
- * Copilot can be connected with the GitHub account it is signed in to on this computer, by signing in in the
- * browser, or with a GitHub token.
+ * Claude can be connected with the Anthropic account the Anthropic CLI is signed in to on this computer, by signing
+ * in in the browser, or with an API key. Copilot can be connected with the GitHub account it is signed in to on this
+ * computer, by signing in in the browser, or with a GitHub token.
  */
 export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX.Element {
     const { translate: _t } = useI18n();
@@ -140,6 +229,8 @@ export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX
         connected,
         copilotAuth,
         copilotAccount,
+        claudeAuth,
+        claudeAccount,
         models,
         model,
         instructions,
@@ -178,13 +269,35 @@ export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX
         invalid_credential: _t("settings|agent|error_invalid_credential"),
         rate_limited: _t("settings|agent|error_rate_limited"),
         unavailable: _t("settings|agent|error_unavailable"),
+        missing_cli: _t("settings|agent|error_missing_cli"),
         unknown: _t("settings|agent|error_unknown"),
     };
     const errorMessage = error && errorMessages[error];
-    const connectedLabel =
-        provider === "copilot" && copilotAuth === "account" && copilotAccount?.login
-            ? _t("settings|agent|connected_copilot_account", { login: copilotAccount.login })
-            : connectedLabels[provider];
+    const { email, organization } = claudeAccount ?? {};
+    const claudeAccountName =
+        email && organization
+            ? _t("settings|agent|claude_account_name", { email, organization })
+            : (email ?? organization);
+    let connectedLabel = connectedLabels[provider];
+    if (provider === "copilot" && copilotAuth === "account" && copilotAccount?.login) {
+        connectedLabel = _t("settings|agent|connected_copilot_account", { login: copilotAccount.login });
+    } else if (provider === "claude" && claudeAuth === "account" && claudeAccountName) {
+        connectedLabel = _t("settings|agent|connected_claude_account", { account: claudeAccountName });
+    }
+
+    // What the account of the computer is signed in to, or undefined if it isn't
+    let claudeSignedInText: string | undefined;
+    if (claudeAccount?.signedIn) {
+        claudeSignedInText = claudeAccountName
+            ? _t("settings|agent|claude_signed_in_as", { account: claudeAccountName })
+            : _t("settings|agent|claude_signed_in");
+    }
+    let copilotSignedInText: string | undefined;
+    if (copilotAccount?.signedIn) {
+        copilotSignedInText = copilotAccount.login
+            ? _t("settings|agent|copilot_signed_in_as", { login: copilotAccount.login })
+            : _t("settings|agent|copilot_signed_in");
+    }
 
     const tokenForm = (
         <Root
@@ -202,47 +315,12 @@ export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX
                     onChange={(ev) => setCredential(ev.currentTarget.value)}
                 />
                 <HelpMessage>{credentialHelp[provider]}</HelpMessage>
-                {provider === "claude" && errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
             </Field>
             <Submit size="md" disabled={isBusy || !credential.trim()}>
                 {_t("settings|agent|connect")}
             </Submit>
         </Root>
     );
-
-    let copilotAccountControls: JSX.Element;
-    if (isSigningIn) {
-        copilotAccountControls = (
-            <Flex align="center" justify="space-between" gap="var(--cpd-space-4x)">
-                <Text size="md">{_t("settings|agent|copilot_signing_in")}</Text>
-                <Button kind="secondary" size="md" onClick={vm.cancelCopilotSignIn}>
-                    {_t("action|cancel")}
-                </Button>
-            </Flex>
-        );
-    } else if (copilotAccount?.signedIn) {
-        copilotAccountControls = (
-            <Flex align="center" justify="space-between" gap="var(--cpd-space-4x)">
-                <Text size="md">
-                    {copilotAccount.login
-                        ? _t("settings|agent|copilot_signed_in_as", { login: copilotAccount.login })
-                        : _t("settings|agent|copilot_signed_in")}
-                </Text>
-                <Button kind="primary" size="md" disabled={isBusy} onClick={vm.connectCopilotAccount}>
-                    {_t("settings|agent|copilot_use_account")}
-                </Button>
-            </Flex>
-        );
-    } else {
-        copilotAccountControls = (
-            <Flex align="center" justify="space-between" gap="var(--cpd-space-4x)">
-                <Text size="md">{_t("settings|agent|copilot_sign_in_description")}</Text>
-                <Button kind="primary" size="md" disabled={isBusy} onClick={vm.signInCopilot}>
-                    {_t("settings|agent|copilot_sign_in")}
-                </Button>
-            </Flex>
-        );
-    }
 
     return (
         <Flex direction="column" gap="var(--cpd-space-6x)" className={styles.agentSettings}>
@@ -281,22 +359,56 @@ export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX
                 </Flex>
             )}
 
-            {!isConnected && provider === "claude" && tokenForm}
-
-            {!isConnected && provider === "copilot" && (
+            {!isConnected && (
                 <Flex direction="column" gap="var(--cpd-space-6x)">
+                    {provider === "claude" ? (
+                        <Flex direction="column" gap="var(--cpd-space-3x)">
+                            <Text as="h3" size="md" weight="semibold">
+                                {_t("settings|agent|claude_account")}
+                            </Text>
+                            <AccountControls
+                                isSigningIn={isSigningIn}
+                                isBusy={isBusy}
+                                signingInText={_t("settings|agent|claude_signing_in")}
+                                signedInText={claudeSignedInText}
+                                signInDescription={_t("settings|agent|claude_sign_in_description")}
+                                signInLabel={_t("settings|agent|claude_sign_in")}
+                                useAccountLabel={_t("settings|agent|claude_use_account")}
+                                onUseAccount={vm.connectClaudeAccount}
+                                onSignIn={vm.signInClaude}
+                                onCancel={vm.cancelClaudeSignIn}
+                            />
+                            <Text size="sm" className={styles.description}>
+                                {_t("settings|agent|claude_account_help")}
+                            </Text>
+                        </Flex>
+                    ) : (
+                        <Flex direction="column" gap="var(--cpd-space-3x)">
+                            <Text as="h3" size="md" weight="semibold">
+                                {_t("settings|agent|copilot_account")}
+                            </Text>
+                            <AccountControls
+                                isSigningIn={isSigningIn}
+                                isBusy={isBusy}
+                                signingInText={_t("settings|agent|copilot_signing_in")}
+                                signedInText={copilotSignedInText}
+                                signInDescription={_t("settings|agent|copilot_sign_in_description")}
+                                signInLabel={_t("settings|agent|copilot_sign_in")}
+                                useAccountLabel={_t("settings|agent|copilot_use_account")}
+                                onUseAccount={vm.connectCopilotAccount}
+                                onSignIn={vm.signInCopilot}
+                                onCancel={vm.cancelCopilotSignIn}
+                            />
+                            <Text size="sm" className={styles.description}>
+                                {_t("settings|agent|copilot_account_help")}
+                            </Text>
+                        </Flex>
+                    )}
                     <Flex direction="column" gap="var(--cpd-space-3x)">
                         <Text as="h3" size="md" weight="semibold">
-                            {_t("settings|agent|copilot_account")}
-                        </Text>
-                        {copilotAccountControls}
-                        <Text size="sm" className={styles.description}>
-                            {_t("settings|agent|copilot_account_help")}
-                        </Text>
-                    </Flex>
-                    <Flex direction="column" gap="var(--cpd-space-3x)">
-                        <Text as="h3" size="md" weight="semibold">
-                            {_t("settings|agent|copilot_token")}
+                            {provider === "claude"
+                                ? _t("settings|agent|claude_key")
+                                : _t("settings|agent|copilot_token")}
                         </Text>
                         {tokenForm}
                     </Flex>

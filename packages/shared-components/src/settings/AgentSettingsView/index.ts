@@ -7,6 +7,8 @@
 
 export { AgentSettingsView } from "./AgentSettingsView";
 export type {
+    AgentSettingsClaudeAccount,
+    AgentSettingsClaudeAuth,
     AgentSettingsCopilotAccount,
     AgentSettingsCopilotAuth,
     AgentSettingsError,

@@ -54,6 +54,8 @@ interface ExtraMetadata extends Metadata {
     electron_appId: string;
     electron_protocol: string;
     electron_windows_cert_sn?: string;
+    // The Element version a variant with its own version is based on
+    upstreamVersion?: string;
 }
 
 /**
@@ -64,6 +66,8 @@ interface Variant extends Metadata {
     "linux.executableName"?: string;
     "linux.deb.name"?: string;
     "protocols": string[];
+    // Version of a variant released apart from Element, such as Element Pilot. Defaults to the package.json version.
+    "version"?: string;
 }
 
 type Writable<T> = NonNullable<
@@ -247,8 +251,17 @@ const config: Omit<Writable<Configuration>, "electronFuses"> & {
 };
 
 /**
+ * A variant with its own version keeps the package.json version, which follows Element, as the version it is based on.
+ */
+if (variant.version) {
+    const pkg: Pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+    config.extraMetadata.version = variant.version;
+    config.extraMetadata.upstreamVersion = pkg.version;
+}
+
+/**
  * Allow specifying the version via env var.
- * If unspecified, it will default to the version in package.json.
+ * If unspecified, it will default to the variant's version or the version in package.json.
  * @param {string} process.env.VERSION
  */
 if (process.env.VERSION) {
