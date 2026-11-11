@@ -95,22 +95,19 @@ jobs:
               env:
                   VARIANT_PATH: pilot/build.json
                   VERSION: ${{ steps.version.outputs.version }}
-              run: pnpm run build --publish never --$ARCH -w squirrel msi
+              run: pnpm run build --publish never --$ARCH -w squirrel
 
             - name: Assert installers are present
               working-directory: apps/desktop
               run: |
                   ls dist/win-*unpacked/Element*.exe
                   ls dist/squirrel-windows*/Element*Setup*.exe
-                  ls dist/Element*.msi
 
             - name: Upload installers
               uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
               with:
                   name: element-pilot-win-${{ env.ARCH }}-${{ steps.version.outputs.version }}
-                  path: |
-                      apps/desktop/dist/squirrel-windows*/Element*Setup*.exe
-                      apps/desktop/dist/Element*.msi
+                  path: apps/desktop/dist/squirrel-windows*/Element*Setup*.exe
                   if-no-files-found: error
                   retention-days: 14
 
@@ -125,4 +122,4 @@ jobs:
                   prerelease=$([[ "$VERSION" == *-* ]] && echo --prerelease || true)
                   gh release create "$GITHUB_REF_NAME" $prerelease --title "Element Pilot $VERSION" \
                       --notes "Based on Element $UPSTREAM." \
-                      apps/desktop/dist/squirrel-windows*/Element*Setup*.exe apps/desktop/dist/Element*.msi
+                      apps/desktop/dist/squirrel-windows*/Element*Setup*.exe
