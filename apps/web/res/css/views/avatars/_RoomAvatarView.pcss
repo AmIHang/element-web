@@ -59,7 +59,8 @@
     }
 
     .mx_RoomAvatarView_PresenceRing_online {
-        --presence-ring-color: var(--cpd-color-icon-accent-primary);
+        /* Online is a status, not branding: it stays green whatever the accent colour is */
+        --presence-ring-color: var(--cpd-color-icon-success-primary);
     }
 
     .mx_RoomAvatarView_PresenceRing_unavailable {
