@@ -147,6 +147,133 @@ exports[`AppearanceUserSettingsTab > should render 1`] = `
           </div>
           <div
             class="mx_SettingsSubsection mx_SettingsSubsection_newUi"
+          >
+            <div
+              class="mx_SettingsSubsectionHeading"
+            >
+              <h2
+                class="mx_Heading_h4 mx_SettingsSubsectionHeading_heading"
+              >
+                Accent colour
+              </h2>
+            </div>
+            <div
+              class="mx_SettingsSubsection_content mx_SettingsSubsection_content_newUi"
+            >
+              <div
+                aria-label="Accent colour"
+                class="_flex _picker"
+                role="radiogroup"
+                style="--mx-flex-display: flex; --mx-flex-direction: row; --mx-flex-align: start; --mx-flex-justify: start; --mx-flex-gap: var(--cpd-space-3x); --mx-flex-wrap: wrap;"
+              >
+                <label
+                  class="_option"
+                  title="Purple"
+                >
+                  <input
+                    aria-label="Purple"
+                    checked=""
+                    class="_input"
+                    name="accentColor"
+                    type="radio"
+                    value="purple"
+                  />
+                  <span
+                    aria-hidden="true"
+                    class="_swatch _purple"
+                  />
+                </label>
+                <label
+                  class="_option"
+                  title="Blue"
+                >
+                  <input
+                    aria-label="Blue"
+                    class="_input"
+                    name="accentColor"
+                    type="radio"
+                    value="blue"
+                  />
+                  <span
+                    aria-hidden="true"
+                    class="_swatch _blue"
+                  />
+                </label>
+                <label
+                  class="_option"
+                  title="Cyan"
+                >
+                  <input
+                    aria-label="Cyan"
+                    class="_input"
+                    name="accentColor"
+                    type="radio"
+                    value="cyan"
+                  />
+                  <span
+                    aria-hidden="true"
+                    class="_swatch _cyan"
+                  />
+                </label>
+                <label
+                  class="_option"
+                  title="Green"
+                >
+                  <input
+                    aria-label="Green"
+                    class="_input"
+                    name="accentColor"
+                    type="radio"
+                    value="green"
+                  />
+                  <span
+                    aria-hidden="true"
+                    class="_swatch _green"
+                  />
+                </label>
+                <label
+                  class="_option"
+                  title="Orange"
+                >
+                  <input
+                    aria-label="Orange"
+                    class="_input"
+                    name="accentColor"
+                    type="radio"
+                    value="orange"
+                  />
+                  <span
+                    aria-hidden="true"
+                    class="_swatch _orange"
+                  />
+                </label>
+                <label
+                  class="_option"
+                  title="Pink"
+                >
+                  <input
+                    aria-label="Pink"
+                    class="_input"
+                    name="accentColor"
+                    type="radio"
+                    value="pink"
+                  />
+                  <span
+                    aria-hidden="true"
+                    class="_swatch _pink"
+                  />
+                </label>
+              </div>
+            </div>
+            <div
+              class="_separator"
+              data-kind="primary"
+              data-orientation="horizontal"
+              role="separator"
+            />
+          </div>
+          <div
+            class="mx_SettingsSubsection mx_SettingsSubsection_newUi"
             data-testid="layoutPanel"
           >
             <div
