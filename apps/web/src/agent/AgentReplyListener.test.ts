@@ -22,6 +22,8 @@ import { AGENT_REPLY_MARKER, AgentReplyListener, REPLY_DELAY_MS } from "./AgentR
 import type { AgentApi } from "./AgentApi";
 import DMRoomMap from "../utils/DMRoomMap";
 import { AgentRoomStore } from "./AgentRoomStore";
+import { SDKContextClass } from "../contexts/SDKContextClass";
+import UserActivity from "../UserActivity";
 
 const ROOM_ID = "!dm:example.org";
 const PARTNER = "@bob:example.org";
@@ -64,6 +66,9 @@ describe("AgentReplyListener", () => {
             getUserIdForRoomId: (roomId: string) => (roomId === ROOM_ID ? PARTNER : undefined),
         } as unknown as DMRoomMap);
         vi.spyOn(AgentRoomStore.instance, "isAgentRoom").mockImplementation((roomId) => roomId === ROOM_ID);
+        // By default the user is looking at another room
+        vi.spyOn(SDKContextClass.instance.roomViewStore, "getRoomId").mockReturnValue("!other:example.org");
+        vi.spyOn(UserActivity.sharedInstance(), "userActiveRecently").mockReturnValue(true);
         agent = {
             getStatus: vi.fn(),
             setSettings: vi.fn(),
@@ -220,6 +225,40 @@ describe("AgentReplyListener", () => {
         await vi.runAllTimersAsync();
 
         expect(client.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it("does not reply while the user has the chat open in front of them", async () => {
+        vi.mocked(SDKContextClass.instance.roomViewStore.getRoomId).mockReturnValue(ROOM_ID);
+        receive(PARTNER, "Hi");
+
+        await waitForReply();
+
+        expect(agent.generateReply).not.toHaveBeenCalled();
+        expect(client.sendTyping).not.toHaveBeenCalled();
+    });
+
+    it("replies in a chat left open while the user is away from the window", async () => {
+        vi.mocked(SDKContextClass.instance.roomViewStore.getRoomId).mockReturnValue(ROOM_ID);
+        vi.mocked(UserActivity.sharedInstance().userActiveRecently).mockReturnValue(false);
+        receive(PARTNER, "Hi");
+
+        await waitForReply();
+
+        expect(client.sendMessage).toHaveBeenCalled();
+    });
+
+    it("does not send a reply when the user opened the chat while it was written", async () => {
+        let finishReply: (result: { ok: true; data: string }) => void = () => {};
+        agent.generateReply.mockReturnValue(new Promise((resolve) => (finishReply = resolve)));
+        receive(PARTNER, "Are you free tomorrow?");
+        await waitForReply();
+
+        vi.mocked(SDKContextClass.instance.roomViewStore.getRoomId).mockReturnValue(ROOM_ID);
+        finishReply({ ok: true, data: "Sure" });
+        await vi.runAllTimersAsync();
+
+        expect(client.sendMessage).not.toHaveBeenCalled();
+        expect(client.sendTyping).toHaveBeenLastCalledWith(ROOM_ID, false, 0);
     });
 
     it("does not send anything when the agent fails", async () => {

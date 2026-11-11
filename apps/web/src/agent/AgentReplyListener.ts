@@ -22,6 +22,8 @@ import type { AgentTurn } from "shared-types";
 import type { AgentApi } from "./AgentApi";
 import DMRoomMap from "../utils/DMRoomMap";
 import { AgentRoomStore } from "./AgentRoomStore";
+import { SDKContextClass } from "../contexts/SDKContextClass";
+import UserActivity from "../UserActivity";
 
 /** How long to wait after the partner's last message, so that several messages in a row get one reply */
 export const REPLY_DELAY_MS = 5000;
@@ -48,7 +50,8 @@ export const AGENT_REPLY_MARKER = "io.element.pilot.agent";
  *   Element Pilot from answering it
  * - `none`: as a normal message, indistinguishable from one the user wrote
  *
- * Only new messages are answered: those sent before the client started are left alone.
+ * Only new messages are answered: those sent before the client started are left alone. Nor is a chat the user has
+ * open in front of them, since they can answer themselves (see {@link AgentReplyListener.isOpenByUser}).
  */
 export class AgentReplyListener {
     private static instance?: AgentReplyListener;
@@ -124,6 +127,17 @@ export class AgentReplyListener {
         return AgentRoomStore.instance.isAgentRoom(room.roomId);
     }
 
+    /**
+     * Whether the user has the room open in front of them: it is the room shown, and they used the focused window
+     * in the last few minutes. A room left open in a window in the background doesn't count.
+     */
+    private isOpenByUser(room: Room): boolean {
+        return (
+            SDKContextClass.instance.roomViewStore.getRoomId() === room.roomId &&
+            UserActivity.sharedInstance().userActiveRecently()
+        );
+    }
+
     /** Whether the event is a message of the chat partner that the agent answers */
     private isPartnerMessage(event: MatrixEvent, room: Room): boolean {
         if (event.getType() !== EventType.RoomMessage || event.isRedacted() || event.isRelation(RelationType.Replace)) {
@@ -141,6 +155,7 @@ export class AgentReplyListener {
         const agent = this.agent;
         // One reply at a time per room; a message arriving meanwhile is part of the history of the next one
         if (!client || !agent || this.replying.has(room.roomId) || !this.isAgentRoom(room)) return;
+        if (this.isOpenByUser(room)) return;
 
         const turns = this.getTurns(room);
         const lastEvent = this.getLastMessage(room);
@@ -162,8 +177,9 @@ export class AgentReplyListener {
                 logger.warn(`Agent could not reply in ${room.roomId}: ${result.error}`, result.message);
                 return;
             }
-            // Don't send a reply that is out of date: the user or the partner wrote in the meantime
-            if (this.client !== client || this.getLastMessage(room) !== lastEvent) return;
+            // Don't send a reply that is out of date: the user or the partner wrote in the meantime, or the user
+            // opened the chat while the reply was being written
+            if (this.client !== client || this.getLastMessage(room) !== lastEvent || this.isOpenByUser(room)) return;
             await client.sendMessage(room.roomId, this.getReplyContent(room.roomId, result.data));
         } catch (e) {
             logger.warn(`Agent could not reply in ${room.roomId}`, e);
