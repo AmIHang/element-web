@@ -14,7 +14,8 @@ Please see LICENSE files in the repository root for full details.
 // computers. The instructions for each chat partner are Markdown files in a "contacts" folder in the user's
 // documents, so that they can also be edited outside of Element and survive installing Element again.
 // Instead of a stored token, Copilot can use the GitHub account it is signed in to on this computer, which the
-// Copilot runtime keeps itself.
+// Copilot runtime keeps itself. Likewise, Claude can use the Anthropic account the Anthropic CLI is signed in to on
+// this computer instead of a stored API key.
 
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -35,11 +36,14 @@ import type {
     AgentStatus,
     AgentSuggestionsRequest,
     AgentTurn,
+    ClaudeAccount,
+    ClaudeAuth,
     CopilotAccount,
     CopilotAuth,
 } from "shared-types";
 
 import { getCopilotRuntimePath } from "./copilot-runtime.js";
+import { ClaudeSignInError, getClaudeAccount, getClaudeAccountConfig, runClaudeSignIn } from "./claude-account.js";
 
 /** The model used for Claude when the user picked none */
 export const DEFAULT_CLAUDE_MODEL = "claude-opus-5-5";
@@ -58,7 +62,7 @@ const REPLY_TIMEOUT_MS = 2 * 60 * 1000;
 
 /** The most characters of instructions for one chat partner that are kept and sent to the provider */
 export const MAX_CONTACT_INSTRUCTIONS_LENGTH = 20000;
-/** How long to wait for the user to sign in to GitHub in the browser */
+/** How long to wait for the user to sign in to GitHub or Anthropic in the browser */
 const SIGN_IN_TIMEOUT_MS = 10 * 60 * 1000;
 
 const DEFAULT_SETTINGS: AgentSettings = { provider: "claude", instructions: "", replySuggestions: true };
@@ -73,6 +77,8 @@ interface AgentStoreData {
     secrets?: Partial<Record<AgentProvider, string>>;
     /** Whether Copilot uses the GitHub account it is signed in to on this computer, rather than a stored token */
     copilotAccount?: boolean;
+    /** Whether Claude uses the Anthropic account of the Anthropic CLI on this computer, rather than a stored key */
+    claudeAccount?: boolean;
     /** The rooms the agent replies in, by the Matrix user they belong to */
     rooms?: Record<string, string[]>;
     /**
@@ -168,15 +174,55 @@ async function getCopilotCredential(): Promise<CopilotCredential | undefined> {
     return token ? { kind: "token", token } : undefined;
 }
 
+/** What Claude is connected with */
+type ClaudeCredential = { kind: "account" } | { kind: "key"; apiKey: string };
+
+/** How Claude is connected, or undefined if it isn't */
+function getClaudeAuth(): ClaudeAuth | undefined {
+    if (getAgentStore().get("claudeAccount")) return "account";
+    return hasCredential("claude") ? "key" : undefined;
+}
+
+/**
+ * Read what Claude is connected with.
+ * @returns the credential, or undefined if Claude is not connected or its key can't be decrypted
+ */
+async function getClaudeCredential(): Promise<ClaudeCredential | undefined> {
+    if (getAgentStore().get("claudeAccount")) return { kind: "account" };
+    const apiKey = await getCredential("claude");
+    return apiKey ? { kind: "key", apiKey } : undefined;
+}
+
+/**
+ * Create a Claude client for a credential.
+ * @returns the client, or a failure if the account of the computer is no longer signed in
+ */
+async function createClaudeClient(
+    credential: ClaudeCredential,
+    options: { timeout?: number } = {},
+): Promise<AgentResult<Anthropic>> {
+    if (credential.kind === "key") return { ok: true, data: new Anthropic({ apiKey: credential.apiKey, ...options }) };
+    try {
+        const config = await getClaudeAccountConfig();
+        if (!config) return failure("not_connected", "The Anthropic CLI is not signed in on this computer");
+        // Only the profile of the CLI, not an API key that happens to be in the environment
+        return { ok: true, data: new Anthropic({ config, ...options }) };
+    } catch (e) {
+        return toFailure("claude", e);
+    }
+}
+
 /**
  * Get the settings of the agent and which providers are connected.
  */
 export function getAgentStatus(): AgentStatus {
     const copilotAuth = getCopilotAuth();
+    const claudeAuth = getClaudeAuth();
     return {
         ...getSettings(),
-        connected: { claude: hasCredential("claude"), copilot: copilotAuth !== undefined },
+        connected: { claude: claudeAuth !== undefined, copilot: copilotAuth !== undefined },
         copilotAuth,
+        claudeAuth,
     };
 }
 
@@ -213,7 +259,7 @@ export async function connectAgent(provider: unknown, credential: unknown): Prom
     }
     const checked =
         provider === "claude"
-            ? await listClaudeModels(credential.trim())
+            ? await listClaudeModels({ kind: "key", apiKey: credential.trim() })
             : await listCopilotModels({ kind: "token", token: credential.trim() });
     if (!checked.ok) return checked;
     try {
@@ -223,17 +269,18 @@ export async function connectAgent(provider: unknown, credential: unknown): Prom
         console.error("Failed to store the agent credential", e);
         return failure("unavailable", e instanceof Error ? e.message : String(e));
     }
-    if (provider === "copilot") getAgentStore().delete("copilotAccount");
+    getAgentStore().delete(provider === "copilot" ? "copilotAccount" : "claudeAccount");
     return { ok: true, data: undefined };
 }
 
 /**
- * Forget the credential of a provider. For Copilot, this also stops using the account of the computer, which stays
- * signed in for the Copilot CLI.
+ * Forget the credential of a provider. This also stops using the account of the computer, which stays signed in for
+ * the Copilot or Anthropic CLI.
  */
 export async function disconnectAgent(provider: unknown): Promise<AgentResult<void>> {
     if (!isProvider(provider)) return failure("invalid_request");
     setCredential(provider, undefined);
+    if (provider === "claude") getAgentStore().delete("claudeAccount");
     if (provider === "copilot") {
         getAgentStore().delete("copilotAccount");
         await stopCopilot();
@@ -377,6 +424,76 @@ async function openSignInPage(url: string): Promise<void> {
 }
 
 /**
+ * Get the Anthropic account the Anthropic CLI is signed in to on this computer.
+ */
+export async function getAgentClaudeAccount(): Promise<AgentResult<ClaudeAccount>> {
+    try {
+        return { ok: true, data: await getClaudeAccount() };
+    } catch (e) {
+        return toFailure("claude", e);
+    }
+}
+
+/**
+ * Connect Claude with the Anthropic account the Anthropic CLI is signed in to on this computer, instead of a stored
+ * API key.
+ */
+export async function connectClaudeAccount(): Promise<AgentResult<void>> {
+    const checked = await listClaudeModels({ kind: "account" });
+    if (!checked.ok) return checked;
+    getAgentStore().set("claudeAccount", true);
+    setCredential("claude", undefined);
+    return { ok: true, data: undefined };
+}
+
+/** The sign-in to Anthropic in progress, if any */
+let claudeSignIn: { stop: (reason: SignInStopped["reason"]) => void } | undefined;
+
+/**
+ * Sign in to an Anthropic account in the browser with the Anthropic CLI, and connect Claude with that account. The
+ * account is the one the CLI uses too.
+ * @returns the account that was signed in
+ */
+export async function signInClaude(): Promise<AgentResult<ClaudeAccount>> {
+    if (claudeSignIn) return failure("invalid_request", "A sign-in is already in progress");
+
+    let stop!: (reason: SignInStopped["reason"]) => void;
+    const stopped = new Promise<never>((_, reject) => {
+        stop = (reason) => reject(new SignInStopped(reason));
+    });
+    // The rejection is handled where the sign-in waits for it; this only keeps it from being reported as unhandled
+    stopped.catch(() => {});
+    claudeSignIn = { stop };
+    const timeout = setTimeout(() => stop("timeout"), SIGN_IN_TIMEOUT_MS);
+    try {
+        await runClaudeSignIn(stopped);
+    } catch (e) {
+        if (e instanceof SignInStopped) {
+            return failure(e.reason === "cancelled" ? "cancelled" : "unavailable", e.message);
+        }
+        if (e instanceof ClaudeSignInError) {
+            return failure(e.reason === "missing_cli" ? "missing_cli" : "unavailable", e.message);
+        }
+        return toFailure("claude", e);
+    } finally {
+        clearTimeout(timeout);
+        claudeSignIn = undefined;
+    }
+
+    const connected = await connectClaudeAccount();
+    if (!connected.ok) return connected;
+    return getAgentClaudeAccount();
+}
+
+/**
+ * Cancel the sign-in to Anthropic in progress, if any.
+ */
+export function cancelClaudeSignIn(): AgentResult<void> {
+    claudeSignIn?.stop("cancelled");
+    return { ok: true, data: undefined };
+}
+
+/**
  * Get the rooms the agent replies in.
  * @param userId - The Matrix user the rooms belong to
  */
@@ -449,8 +566,8 @@ export function setAgentReplyMarking(
 export async function listAgentModels(provider: unknown): Promise<AgentResult<AgentModel[]>> {
     if (!isProvider(provider)) return failure("invalid_request");
     if (provider === "claude") {
-        const apiKey = await getCredential("claude");
-        return apiKey ? listClaudeModels(apiKey) : failure("not_connected");
+        const credential = await getClaudeCredential();
+        return credential ? listClaudeModels(credential) : failure("not_connected");
     }
     const credential = await getCopilotCredential();
     return credential ? listCopilotModels(credential) : failure("not_connected");
@@ -618,11 +735,11 @@ export async function generateAgentReply(request: unknown): Promise<AgentResult<
         await getPromptContactInstructions(request.partnerId),
     );
     if (settings.provider === "claude") {
-        const apiKey = await getCredential("claude");
-        if (!apiKey) return failure("not_connected");
+        const credential = await getClaudeCredential();
+        if (!credential) return failure("not_connected");
         const messages = toClaudeMessages(request.turns);
         if (messages.at(-1)?.role !== "user") return failure("invalid_request");
-        return askClaude(apiKey, settings.model, system, messages);
+        return askClaude(credential, settings.model, system, messages);
     }
     const credential = await getCopilotCredential();
     if (!credential) return failure("not_connected");
@@ -643,9 +760,9 @@ export async function generateAgentSuggestions(request: unknown): Promise<AgentR
     const prompt = buildSuggestionsPrompt(request);
     let result: AgentResult<string>;
     if (settings.provider === "claude") {
-        const apiKey = await getCredential("claude");
-        if (!apiKey) return failure("not_connected");
-        result = await askClaude(apiKey, settings.model, system, [{ role: "user", content: prompt }]);
+        const credential = await getClaudeCredential();
+        if (!credential) return failure("not_connected");
+        result = await askClaude(credential, settings.model, system, [{ role: "user", content: prompt }]);
     } else {
         const credential = await getCopilotCredential();
         if (!credential) return failure("not_connected");
@@ -789,9 +906,11 @@ export function buildSystemPrompt(
     return lines.join("\n");
 }
 
-async function listClaudeModels(apiKey: string): Promise<AgentResult<AgentModel[]>> {
+async function listClaudeModels(credential: ClaudeCredential): Promise<AgentResult<AgentModel[]>> {
+    const client = await createClaudeClient(credential);
+    if (!client.ok) return client;
     try {
-        const page = await new Anthropic({ apiKey }).models.list({ limit: 100 });
+        const page = await client.data.models.list({ limit: 100 });
         return { ok: true, data: page.data.map((model) => ({ id: model.id, name: model.display_name })) };
     } catch (e) {
         return toFailure("claude", e);
@@ -833,16 +952,17 @@ export function toClaudeMessages(turns: AgentTurn[]): Anthropic.MessageParam[] {
  * Get the answer of Claude to a conversation that ends with a message of the user's side.
  */
 async function askClaude(
-    apiKey: string,
+    credential: ClaudeCredential,
     model: string | undefined,
     system: string,
     messages: Anthropic.MessageParam[],
 ): Promise<AgentResult<string>> {
     const modelId = model ?? DEFAULT_CLAUDE_MODEL;
+    const client = await createClaudeClient(credential, { timeout: REPLY_TIMEOUT_MS });
+    if (!client.ok) return client;
 
     try {
-        const client = new Anthropic({ apiKey, timeout: REPLY_TIMEOUT_MS });
-        const response = await client.beta.messages.create({
+        const response = await client.data.beta.messages.create({
             model: modelId,
             max_tokens: 16000,
             system,

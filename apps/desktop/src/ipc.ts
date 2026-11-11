@@ -13,12 +13,15 @@ import { consumeDisplayMediaCallback } from "./displayMediaCallback.js";
 import Store, { clearData } from "./store.js";
 import { getConfig } from "./config.js";
 import {
+    cancelClaudeSignIn,
     cancelCopilotSignIn,
     connectAgent,
+    connectClaudeAccount,
     connectCopilotAccount,
     disconnectAgent,
     generateAgentReply,
     generateAgentSuggestions,
+    getAgentClaudeAccount,
     getAgentReplyMarkings,
     getAgentRooms,
     getAgentStatus,
@@ -30,6 +33,7 @@ import {
     setAgentRoom,
     setAgentSettings,
     setContactInstructions,
+    signInClaude,
     signInCopilot,
 } from "./agent.js";
 
@@ -215,6 +219,18 @@ ipcMain.on("ipcCall", async function (_ev: IpcMainEvent, payload) {
             break;
         case "agentCancelCopilotSignIn":
             ret = cancelCopilotSignIn();
+            break;
+        case "agentGetClaudeAccount":
+            ret = await getAgentClaudeAccount();
+            break;
+        case "agentConnectClaudeAccount":
+            ret = await connectClaudeAccount();
+            break;
+        case "agentSignInClaude":
+            ret = await signInClaude();
+            break;
+        case "agentCancelClaudeSignIn":
+            ret = cancelClaudeSignIn();
             break;
         case "agentListModels":
             ret = await listAgentModels(args[0]);

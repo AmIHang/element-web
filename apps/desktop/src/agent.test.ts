@@ -16,12 +16,15 @@ import type { AgentReplyRequest, AgentSuggestionsRequest } from "shared-types";
 import {
     buildSuggestionsSystemPrompt,
     buildSystemPrompt,
+    cancelClaudeSignIn,
     cancelCopilotSignIn,
     connectAgent,
+    connectClaudeAccount,
     connectCopilotAccount,
     disconnectAgent,
     generateAgentReply,
     generateAgentSuggestions,
+    getAgentClaudeAccount,
     getAgentDataPath,
     getAgentReplyMarkings,
     getAgentRooms,
@@ -37,45 +40,53 @@ import {
     setAgentRoom,
     setAgentSettings,
     setContactInstructions,
+    signInClaude,
     signInCopilot,
     stopCopilot,
     toClaudeMessages,
 } from "./agent.js";
+import { ClaudeSignInError } from "./claude-account.js";
 
-const { storeData, storeOptions, safeStorage, shell, anthropic, copilot, getCopilotRuntimePath } = vi.hoisted(() => {
-    return {
-        /** What the agent's store holds, as electron-store would write it to disk */
-        storeData: {} as Record<string, unknown>,
-        storeOptions: [] as unknown[],
-        safeStorage: {
-            isEncryptionAvailable: vi.fn(() => true),
-            // Not real encryption, but clearly different from the plain text
-            encryptString: vi.fn((text: string) => Buffer.from(`encrypted:${text}`)),
-            decryptString: vi.fn((buffer: Buffer) => buffer.toString().replace(/^encrypted:/, "")),
-        },
-        shell: { openExternal: vi.fn(async () => {}) },
-        anthropic: {
-            options: [] as unknown[],
-            modelsList: vi.fn(),
-            messagesCreate: vi.fn(),
-        },
-        copilot: {
-            options: [] as unknown[],
-            start: vi.fn(async () => {}),
-            stop: vi.fn(async () => []),
-            getAuthStatus: vi.fn(),
-            listModels: vi.fn(),
-            createSession: vi.fn(),
-            deleteSession: vi.fn(async () => {}),
-            sendAndWait: vi.fn(),
-            disconnect: vi.fn(async () => {}),
-            loginBegin: vi.fn(),
-            loginAdvance: vi.fn(),
-            loginCancel: vi.fn(async () => {}),
-        },
-        getCopilotRuntimePath: vi.fn((): string | undefined => undefined),
-    };
-});
+const { storeData, storeOptions, safeStorage, shell, anthropic, copilot, getCopilotRuntimePath, claudeAccount } =
+    vi.hoisted(() => {
+        return {
+            /** What the agent's store holds, as electron-store would write it to disk */
+            storeData: {} as Record<string, unknown>,
+            storeOptions: [] as unknown[],
+            safeStorage: {
+                isEncryptionAvailable: vi.fn(() => true),
+                // Not real encryption, but clearly different from the plain text
+                encryptString: vi.fn((text: string) => Buffer.from(`encrypted:${text}`)),
+                decryptString: vi.fn((buffer: Buffer) => buffer.toString().replace(/^encrypted:/, "")),
+            },
+            shell: { openExternal: vi.fn(async () => {}) },
+            anthropic: {
+                options: [] as unknown[],
+                modelsList: vi.fn(),
+                messagesCreate: vi.fn(),
+            },
+            copilot: {
+                options: [] as unknown[],
+                start: vi.fn(async () => {}),
+                stop: vi.fn(async () => []),
+                getAuthStatus: vi.fn(),
+                listModels: vi.fn(),
+                createSession: vi.fn(),
+                deleteSession: vi.fn(async () => {}),
+                sendAndWait: vi.fn(),
+                disconnect: vi.fn(async () => {}),
+                loginBegin: vi.fn(),
+                loginAdvance: vi.fn(),
+                loginCancel: vi.fn(async () => {}),
+            },
+            getCopilotRuntimePath: vi.fn((): string | undefined => undefined),
+            claudeAccount: {
+                getClaudeAccountConfig: vi.fn(),
+                getClaudeAccount: vi.fn(),
+                runClaudeSignIn: vi.fn(),
+            },
+        };
+    });
 
 vi.mock("electron", () => ({
     app: { getPath: vi.fn(() => "/roaming/Element") },
@@ -133,6 +144,15 @@ vi.mock("@github/copilot-sdk", () => ({
 }));
 
 vi.mock("./copilot-runtime.js", () => ({ getCopilotRuntimePath }));
+vi.mock("./claude-account.js", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("./claude-account.js")>()),
+    ...claudeAccount,
+}));
+
+/** The profile of the Anthropic CLI, as the SDK reads it */
+const claudeConfig = {
+    authentication: { type: "user_oauth" as const, credentials_path: "/anthropic/credentials/default.json" },
+};
 
 const request: AgentReplyRequest = {
     ownName: "Alice",
@@ -494,6 +514,104 @@ describe("agent", () => {
             expect(await signInCopilot()).toMatchObject({ ok: false, error: "unavailable" });
             expect(shell.openExternal).not.toHaveBeenCalled();
             expect(storeData.copilotAccount).toBeUndefined();
+        });
+    });
+
+    describe("the Anthropic account of the computer", () => {
+        beforeEach(() => {
+            claudeAccount.getClaudeAccountConfig.mockResolvedValue(claudeConfig);
+            claudeAccount.getClaudeAccount.mockResolvedValue({
+                signedIn: true,
+                email: "alice@example.org",
+                organization: "Example",
+            });
+            anthropic.modelsList.mockResolvedValue({ data: [{ id: "claude-opus-5-5", display_name: "Opus 5.5" }] });
+        });
+
+        it("reports the account the Anthropic CLI is signed in to", async () => {
+            expect(await getAgentClaudeAccount()).toEqual({
+                ok: true,
+                data: { signedIn: true, email: "alice@example.org", organization: "Example" },
+            });
+        });
+
+        it("connects Claude with the account's profile instead of a stored key", async () => {
+            storeCredential("claude", "sk-ant-test");
+
+            expect(await connectClaudeAccount()).toEqual({ ok: true, data: undefined });
+
+            // The profile, never an API key from the environment
+            expect(anthropic.options).toEqual([{ config: claudeConfig }]);
+            expect(storeData.secrets).toEqual({});
+            expect(getAgentStatus()).toMatchObject({ connected: { claude: true }, claudeAuth: "account" });
+            expect(await listAgentModels("claude")).toEqual({
+                ok: true,
+                data: [{ id: "claude-opus-5-5", name: "Opus 5.5" }],
+            });
+        });
+
+        it("doesn't connect Claude when the computer is not signed in", async () => {
+            claudeAccount.getClaudeAccountConfig.mockResolvedValue(undefined);
+
+            expect(await connectClaudeAccount()).toMatchObject({ ok: false, error: "not_connected" });
+            expect(storeData.claudeAccount).toBeUndefined();
+        });
+
+        it("replies with the account, and reports when it has been signed out meanwhile", async () => {
+            storeData.claudeAccount = true;
+            anthropic.messagesCreate.mockResolvedValue({
+                stop_reason: "end_turn",
+                content: [{ type: "text", text: "Hi" }],
+            });
+
+            expect(await generateAgentReply(request)).toEqual({ ok: true, data: "Hi" });
+            expect(anthropic.options).toEqual([{ config: claudeConfig, timeout: 2 * 60 * 1000 }]);
+
+            claudeAccount.getClaudeAccountConfig.mockResolvedValue(undefined);
+            expect(await generateAgentReply(request)).toMatchObject({ ok: false, error: "not_connected" });
+        });
+
+        it("switches to a key, and forgets the account on disconnecting without signing it out", async () => {
+            await connectClaudeAccount();
+
+            await connectAgent("claude", "sk-ant-test");
+            expect(getAgentStatus()).toMatchObject({ claudeAuth: "key" });
+            expect(storeData.claudeAccount).toBeUndefined();
+
+            await connectClaudeAccount();
+            await disconnectAgent("claude");
+            expect(getAgentStatus()).toMatchObject({ connected: { claude: false }, claudeAuth: undefined });
+        });
+
+        it("signs in with the Anthropic CLI and connects Claude with the new account", async () => {
+            claudeAccount.runClaudeSignIn.mockResolvedValue(undefined);
+
+            expect(await signInClaude()).toEqual({
+                ok: true,
+                data: { signedIn: true, email: "alice@example.org", organization: "Example" },
+            });
+            expect(storeData.claudeAccount).toBe(true);
+        });
+
+        it("stops signing in when the user cancels", async () => {
+            claudeAccount.runClaudeSignIn.mockImplementation((stopped: Promise<never>) => stopped);
+
+            const result = signInClaude();
+            await vi.waitFor(() => expect(claudeAccount.runClaudeSignIn).toHaveBeenCalled());
+            expect(await signInClaude()).toMatchObject({ ok: false, error: "invalid_request" });
+            cancelClaudeSignIn();
+
+            expect(await result).toMatchObject({ ok: false, error: "cancelled" });
+            expect(storeData.claudeAccount).toBeUndefined();
+        });
+
+        it("reports a missing Anthropic CLI and a sign-in that fails", async () => {
+            claudeAccount.runClaudeSignIn.mockRejectedValue(new ClaudeSignInError("missing_cli", "No ant"));
+            expect(await signInClaude()).toEqual({ ok: false, error: "missing_cli", message: "No ant" });
+
+            claudeAccount.runClaudeSignIn.mockRejectedValue(new ClaudeSignInError("failed", "Denied"));
+            expect(await signInClaude()).toEqual({ ok: false, error: "unavailable", message: "Denied" });
+            expect(storeData.claudeAccount).toBeUndefined();
         });
     });
 
