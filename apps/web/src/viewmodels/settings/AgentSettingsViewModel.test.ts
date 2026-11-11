@@ -57,6 +57,7 @@ describe("AgentSettingsViewModel", () => {
             openContactInstructions: vi.fn(),
             generateReply: vi.fn(),
             generateSuggestions: vi.fn(),
+            generateMessage: vi.fn(),
         };
     }
 

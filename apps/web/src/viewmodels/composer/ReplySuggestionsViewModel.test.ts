@@ -104,6 +104,7 @@ describe("ReplySuggestionsViewModel", () => {
             openContactInstructions: vi.fn(),
             generateReply: vi.fn(),
             generateSuggestions: vi.fn().mockResolvedValue({ ok: true, data: SUGGESTIONS }),
+            generateMessage: vi.fn(),
         };
     });
 

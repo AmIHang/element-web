@@ -132,6 +132,25 @@ export interface AgentSuggestionsRequest {
 }
 
 /**
+ * A request for a message the user wants to send in a chat, written from a short instruction of theirs, such as
+ * "tell Phillip to finally fix the bugs".
+ */
+export interface AgentMessageRequest {
+    /** The display name of the user the agent writes for */
+    ownName: string;
+    /** The name of the chat */
+    chatName: string;
+    /** Whether the chat is a direct message */
+    isDirect: boolean;
+    /** The Matrix user ID of the partner of a direct message, whose own instructions are added if there are any */
+    partnerId?: string;
+    /** What the message should say, in the user's own words */
+    instruction: string;
+    /** The latest messages of the chat, oldest first, for context; empty in a new chat */
+    messages: AgentSuggestionMessage[];
+}
+
+/**
  * The instructions for the agent about one chat partner, kept in a Markdown file of their own on this computer.
  */
 export interface AgentContactInstructions {

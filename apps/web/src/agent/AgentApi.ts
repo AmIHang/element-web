@@ -7,6 +7,7 @@ Please see LICENSE files in the repository root for full details.
 
 import type {
     AgentContactInstructions,
+    AgentMessageRequest,
     AgentModel,
     AgentProvider,
     AgentReplyMarking,
@@ -91,4 +92,6 @@ export interface AgentApi {
     generateReply(request: AgentReplyRequest): Promise<AgentResult<string>>;
     /** Suggest replies the user could send next in a chat */
     generateSuggestions(request: AgentSuggestionsRequest): Promise<AgentResult<string[]>>;
+    /** Write a message the user wants to send in a chat, from their instruction of what it should say */
+    generateMessage(request: AgentMessageRequest): Promise<AgentResult<string>>;
 }
