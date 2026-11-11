@@ -36,11 +36,11 @@ class FakeProcess extends EventEmitter {
 let configDir: string;
 
 /** Write a profile as `ant auth login` does */
-async function writeProfile(name: string, type: string, credentials?: object): Promise<void> {
+async function writeProfile(name: string, type: string, credentials?: object, workspace?: string): Promise<void> {
     await fs.mkdir(path.join(configDir, "configs"), { recursive: true });
     await fs.writeFile(
         path.join(configDir, "configs", `${name}.json`),
-        JSON.stringify({ authentication: { type, client_id: "test" } }),
+        JSON.stringify({ authentication: { type, client_id: "test" }, workspace_id: workspace }),
     );
     if (credentials) {
         await fs.mkdir(path.join(configDir, "credentials"), { recursive: true });
@@ -57,6 +57,11 @@ describe("claude-account", () => {
         vi.stubEnv("ANTHROPIC_CONFIG_DIR", configDir);
         vi.stubEnv("ANTHROPIC_PROFILE", "");
         vi.stubEnv("ANTHROPIC_FEDERATION_RULE_ID", "");
+        vi.stubEnv("ANTHROPIC_WORKSPACE_ID", "");
+        // No Anthropic CLI unless a test puts one on the PATH
+        vi.stubEnv("PATH", "");
+        vi.stubEnv("HOME", configDir);
+        vi.stubEnv("USERPROFILE", configDir);
     });
 
     afterEach(async () => {
@@ -67,21 +72,33 @@ describe("claude-account", () => {
     describe("getClaudeAccount", () => {
         it("is not signed in without a profile", async () => {
             expect(await getClaudeAccountConfig()).toBeUndefined();
-            expect(await getClaudeAccount()).toEqual({ signedIn: false });
+            expect(await getClaudeAccount()).toEqual({ signedIn: false, cliInstalled: false });
         });
 
-        it("reads the account of the active profile, with where its tokens are", async () => {
-            await writeProfile("work", "user_oauth", {
-                access_token: "token",
-                account_email: "alice@example.org",
-                organization_name: "Example",
-            });
+        it("reports whether the Anthropic CLI is installed", async () => {
+            const bin = path.join(configDir, "bin");
+            await fs.mkdir(bin);
+            await fs.writeFile(path.join(bin, process.platform === "win32" ? "ant.exe" : "ant"), "");
+            vi.stubEnv("PATH", bin);
+
+            expect(await getClaudeAccount()).toEqual({ signedIn: false, cliInstalled: true });
+        });
+
+        it("reads the account of the active profile, with its workspace and where its tokens are", async () => {
+            await writeProfile(
+                "work",
+                "user_oauth",
+                { access_token: "token", account_email: "alice@example.org", organization_name: "Example" },
+                "wrkspc_01",
+            );
             await fs.writeFile(path.join(configDir, "active_config"), "work\n");
 
             expect(await getClaudeAccount()).toEqual({
                 signedIn: true,
                 email: "alice@example.org",
                 organization: "Example",
+                workspace: "wrkspc_01",
+                cliInstalled: false,
             });
             expect((await getClaudeAccountConfig())?.authentication.credentials_path).toBe(
                 path.join(configDir, "credentials", "work.json"),
@@ -90,11 +107,10 @@ describe("claude-account", () => {
 
         it("is not signed in with a profile that has no tokens, or is not for a person", async () => {
             await writeProfile("default", "user_oauth");
-            expect(await getClaudeAccount()).toEqual({ signedIn: false });
+            expect(await getClaudeAccount()).toEqual({ signedIn: false, cliInstalled: false });
 
-            vi.stubEnv("ANTHROPIC_FEDERATION_RULE_ID", "");
             await writeProfile("default", "oidc_federation", { access_token: "token" });
-            expect(await getClaudeAccount()).toEqual({ signedIn: false });
+            expect(await getClaudeAccount()).toEqual({ signedIn: false, cliInstalled: false });
         });
     });
 
@@ -165,9 +181,6 @@ describe("claude-account", () => {
 
         it("reports a missing Anthropic CLI", async () => {
             vi.stubEnv("PATH", "");
-            vi.stubEnv("Path", "");
-            vi.stubEnv("HOME", configDir);
-            vi.stubEnv("USERPROFILE", configDir);
 
             const error = await runClaudeSignIn(new Promise(() => {})).catch((e) => e);
             expect(error).toBeInstanceOf(ClaudeSignInError);

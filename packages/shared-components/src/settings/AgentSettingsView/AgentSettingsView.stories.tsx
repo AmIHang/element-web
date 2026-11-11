@@ -61,7 +61,7 @@ const meta = {
         copilotAuth: undefined,
         copilotAccount: undefined,
         claudeAuth: undefined,
-        claudeAccount: { signedIn: false },
+        claudeAccount: { signedIn: false, cliInstalled: true },
         models: [],
         model: undefined,
         instructions: "",
@@ -101,7 +101,19 @@ export const Connected: Story = {
 
 export const ClaudeSignedIn: Story = {
     args: {
-        claudeAccount: { signedIn: true, email: "alice@example.org", organization: "Example Ltd" },
+        claudeAccount: {
+            signedIn: true,
+            email: "alice@example.org",
+            organization: "Example Ltd",
+            workspace: "wrkspc_01AbCd",
+            cliInstalled: true,
+        },
+    },
+};
+
+export const ClaudeWithoutCli: Story = {
+    args: {
+        claudeAccount: { signedIn: false, cliInstalled: false },
     },
 };
 
@@ -116,7 +128,13 @@ export const ClaudeConnectedWithAccount: Story = {
     args: {
         connected: { claude: true, copilot: false },
         claudeAuth: "account",
-        claudeAccount: { signedIn: true, email: "alice@example.org", organization: "Example Ltd" },
+        claudeAccount: {
+            signedIn: true,
+            email: "alice@example.org",
+            organization: "Example Ltd",
+            workspace: "wrkspc_01AbCd",
+            cliInstalled: true,
+        },
         models: [
             { id: "claude-opus-5-5", name: "Claude Opus 5.5" },
             { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5" },

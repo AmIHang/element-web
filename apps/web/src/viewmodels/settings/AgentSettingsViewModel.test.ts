@@ -12,7 +12,13 @@ import { AgentSettingsViewModel, toSettingsError } from "./AgentSettingsViewMode
 import type { AgentApi } from "../../agent/AgentApi";
 
 const MODELS = [{ id: "claude-opus-5-5", name: "Claude Opus 5.5" }];
-const CLAUDE_ACCOUNT = { signedIn: true, email: "alice@example.org", organization: "Example" };
+const CLAUDE_ACCOUNT = {
+    signedIn: true,
+    email: "alice@example.org",
+    organization: "Example",
+    workspace: "wrkspc_01",
+    cliInstalled: true,
+};
 
 describe("AgentSettingsViewModel", () => {
     let agent: Mocked<AgentApi>;

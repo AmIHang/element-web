@@ -65,6 +65,10 @@ export interface AgentSettingsClaudeAccount {
     email?: string;
     /** The name of the organization the account uses, if known */
     organization?: string;
+    /** The ID of the workspace the sign-in is bound to, if known */
+    workspace?: string;
+    /** Whether the Anthropic CLI, which signing in needs, is installed; undefined if not known */
+    cliInstalled?: boolean;
 }
 
 /**
@@ -285,6 +289,19 @@ export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX
         connectedLabel = _t("settings|agent|connected_claude_account", { account: claudeAccountName });
     }
 
+    // The workspace is shown for the account of the computer only, not for an API key
+    const claudeWorkspace =
+        claudeAccount?.signedIn && claudeAccount.workspace && (!isConnected || claudeAuth === "account") ? (
+            <Text size="sm" className={styles.description}>
+                {_t("settings|agent|claude_workspace", { workspace: claudeAccount.workspace })}
+            </Text>
+        ) : undefined;
+    // Without the CLI, signing in can't work, which is said before the user tries
+    const claudeSignInDescription =
+        claudeAccount?.cliInstalled === false
+            ? _t("settings|agent|claude_cli_missing")
+            : _t("settings|agent|claude_sign_in_description");
+
     // What the account of the computer is signed in to, or undefined if it isn't
     let claudeSignedInText: string | undefined;
     if (claudeAccount?.signedIn) {
@@ -358,6 +375,7 @@ export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX
                     </Button>
                 </Flex>
             )}
+            {isConnected && provider === "claude" && claudeWorkspace}
 
             {!isConnected && (
                 <Flex direction="column" gap="var(--cpd-space-6x)">
@@ -371,13 +389,14 @@ export function AgentSettingsView({ vm }: Readonly<AgentSettingsViewProps>): JSX
                                 isBusy={isBusy}
                                 signingInText={_t("settings|agent|claude_signing_in")}
                                 signedInText={claudeSignedInText}
-                                signInDescription={_t("settings|agent|claude_sign_in_description")}
+                                signInDescription={claudeSignInDescription}
                                 signInLabel={_t("settings|agent|claude_sign_in")}
                                 useAccountLabel={_t("settings|agent|claude_use_account")}
                                 onUseAccount={vm.connectClaudeAccount}
                                 onSignIn={vm.signInClaude}
                                 onCancel={vm.cancelClaudeSignIn}
                             />
+                            {claudeWorkspace}
                             <Text size="sm" className={styles.description}>
                                 {_t("settings|agent|claude_account_help")}
                             </Text>

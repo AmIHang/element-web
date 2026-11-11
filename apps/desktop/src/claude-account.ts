@@ -38,13 +38,17 @@ export async function getClaudeAccountConfig(): Promise<AnthropicConfig | undefi
  * Get the Anthropic account the Anthropic CLI is signed in to on this computer.
  */
 export async function getClaudeAccount(): Promise<ClaudeAccount> {
-    if (!(await getClaudeAccountConfig())) return { signedIn: false };
+    const cliInstalled = (await findAnthropicCli()) !== undefined;
+    const config = await getClaudeAccountConfig();
+    if (!config) return { signedIn: false, cliInstalled };
     const credentials = await loadCredentials();
-    if (!credentials?.access_token) return { signedIn: false };
+    if (!credentials?.access_token) return { signedIn: false, cliInstalled };
     return {
         signedIn: true,
         email: credentials.account_email || undefined,
         organization: credentials.organization_name || undefined,
+        workspace: config.workspace_id || undefined,
+        cliInstalled,
     };
 }
 
