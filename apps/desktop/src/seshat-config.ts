@@ -10,6 +10,9 @@ export enum TokenizerMode {
     Language = "language",
 }
 
+/** Not a Seshat mode: selects the SQLite trigram index in `sqlite-event-index.ts` instead of Seshat. */
+export const SUBSTRING_TOKENIZER_MODE = "substring";
+
 /**
  * Create Seshat configuration based on tokenizer mode.
  *
