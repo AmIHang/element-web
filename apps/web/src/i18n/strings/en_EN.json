@@ -2495,6 +2495,7 @@
         "all_rooms_home_description": "All rooms you're in will appear in Home.",
         "always_show_message_timestamps": "Always show message timestamps",
         "appearance": {
+            "accent_color": "Accent colour",
             "bundled_emoji_font": "Use bundled emoji font",
             "compact_layout": "Show compact text and messages",
             "compact_layout_description": "Modern layout must be selected to use this feature.",

@@ -21,6 +21,7 @@ import SettingsStore from "../settings/SettingsStore";
 import PlatformPeg from "../PlatformPeg";
 import SdkConfig from "../SdkConfig";
 import { setTheme } from "../theme";
+import { applyAccentColor } from "../settings/enums/AccentColor";
 import type MatrixChat from "../components/structures/MatrixChat";
 import ElectronPlatform from "./platform/ElectronPlatform";
 import PWAPlatform from "./platform/PWAPlatform";
@@ -119,6 +120,7 @@ export async function loadLanguage(): Promise<void> {
 }
 
 export async function loadTheme(): Promise<void> {
+    applyAccentColor(SettingsStore.getValue("accentColor"));
     return setTheme();
 }
 

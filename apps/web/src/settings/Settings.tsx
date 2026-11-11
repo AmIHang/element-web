@@ -56,6 +56,8 @@ import InviteRulesConfigController from "./controllers/InviteRulesConfigControll
 import { type ComputedInviteConfig } from "../@types/invite-rules.ts";
 import BlockInvitesConfigController from "./controllers/BlockInvitesConfigController.ts";
 import RequiresSettingsController from "./controllers/RequiresSettingsController.ts";
+import { AccentColorController } from "./controllers/AccentColorController.ts";
+import { type AccentColor, DEFAULT_ACCENT_COLOR } from "./enums/AccentColor.ts";
 import {
     type ReorderableSection,
     type CustomSectionsData,
@@ -285,6 +287,7 @@ export interface Settings {
     "theme": IBaseSetting<string>;
     "custom_themes": IBaseSetting<CustomTheme[]>;
     "use_system_theme": IBaseSetting<boolean>;
+    "accentColor": IBaseSetting<AccentColor>;
     "useBundledEmojiFont": IBaseSetting<boolean>;
     "useSystemFont": IBaseSetting<boolean>;
     "systemFont": IBaseSetting<string>;
@@ -985,6 +988,13 @@ export const SETTINGS: Settings = {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS,
         default: true,
         displayName: _td("settings|appearance|match_system_theme"),
+    },
+    "accentColor": {
+        // Per device, like the theme: the colour is a matter of this screen, not of the account
+        supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS,
+        default: DEFAULT_ACCENT_COLOR,
+        displayName: _td("settings|appearance|accent_color"),
+        controller: new AccentColorController(),
     },
     "useBundledEmojiFont": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS,
