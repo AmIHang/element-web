@@ -17,6 +17,7 @@ const {
     NotConnected,
     Connected,
     ClaudeSignedIn,
+    ClaudeWithoutCli,
     ClaudeSigningIn,
     ClaudeConnectedWithAccount,
     ClaudeMissingCli,
@@ -77,6 +78,7 @@ describe("<AgentSettingsView />", () => {
         expect(
             screen.getByText("The Anthropic CLI on this computer is signed in as alice@example.org (Example Ltd)."),
         ).toBeInTheDocument();
+        expect(screen.getByText("Workspace: wrkspc_01AbCd")).toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: "Use this account" }));
 
@@ -96,6 +98,7 @@ describe("<AgentSettingsView />", () => {
     it("shows the account Claude is connected with", () => {
         render(<ClaudeConnectedWithAccount />);
         expect(screen.getByText("Connected to Claude as alice@example.org (Example Ltd)")).toBeInTheDocument();
+        expect(screen.getByText("Workspace: wrkspc_01AbCd")).toBeInTheDocument();
         expect(screen.queryByLabelText("Anthropic API key")).not.toBeInTheDocument();
         expect(screen.getByLabelText("Model")).toBeInTheDocument();
     });
@@ -105,6 +108,22 @@ describe("<AgentSettingsView />", () => {
         expect(screen.getByText("The Anthropic CLI on this computer is signed in as Example Ltd.")).toBeInTheDocument();
         render(<ClaudeSignedIn claudeAccount={{ signedIn: true }} />);
         expect(screen.getByText("The Anthropic CLI on this computer is signed in.")).toBeInTheDocument();
+    });
+
+    it("says before signing in that the Anthropic CLI is not installed", () => {
+        render(<ClaudeWithoutCli />);
+        expect(
+            screen.getByText(
+                "The Anthropic CLI (ant) is not installed on this computer. Install it, then sign in with your Anthropic Console account.",
+            ),
+        ).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Sign in with Anthropic" })).toBeEnabled();
+    });
+
+    it("doesn't show the workspace of the computer's account when Claude uses an API key", () => {
+        render(<ClaudeConnectedWithAccount claudeAuth="key" />);
+        expect(screen.getByText("Connected to Claude")).toBeInTheDocument();
+        expect(screen.queryByText("Workspace: wrkspc_01AbCd")).not.toBeInTheDocument();
     });
 
     it("explains that signing in needs the Anthropic CLI", () => {
