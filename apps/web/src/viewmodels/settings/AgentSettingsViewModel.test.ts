@@ -12,6 +12,7 @@ import { AgentSettingsViewModel, toSettingsError } from "./AgentSettingsViewMode
 import type { AgentApi } from "../../agent/AgentApi";
 
 const MODELS = [{ id: "claude-opus-5-5", name: "Claude Opus 5.5" }];
+const CLAUDE_ACCOUNT = { signedIn: true, email: "alice@example.org", organization: "Example" };
 
 describe("AgentSettingsViewModel", () => {
     let agent: Mocked<AgentApi>;
@@ -36,6 +37,10 @@ describe("AgentSettingsViewModel", () => {
             connectCopilotAccount: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
             signInCopilot: vi.fn().mockResolvedValue({ ok: true, data: { signedIn: true, login: "octocat" } }),
             cancelCopilotSignIn: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+            getClaudeAccount: vi.fn().mockResolvedValue({ ok: true, data: CLAUDE_ACCOUNT }),
+            connectClaudeAccount: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+            signInClaude: vi.fn().mockResolvedValue({ ok: true, data: CLAUDE_ACCOUNT }),
+            cancelClaudeSignIn: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
             listModels: vi.fn().mockResolvedValue({ ok: true, data: MODELS }),
             getRooms: vi.fn(),
             setRoom: vi.fn(),
@@ -106,7 +111,11 @@ describe("AgentSettingsViewModel", () => {
 
             await vi.waitFor(() => expect(vm.getSnapshot().models).toEqual(MODELS));
             expect(agent.connect).toHaveBeenCalledWith("claude", "sk-ant-test");
-            expect(vm.getSnapshot()).toMatchObject({ isBusy: false, connected: { claude: true, copilot: false } });
+            expect(vm.getSnapshot()).toMatchObject({
+                isBusy: false,
+                connected: { claude: true, copilot: false },
+                claudeAuth: "key",
+            });
         });
 
         it("shows why a credential was not accepted", async () => {
@@ -265,11 +274,91 @@ describe("AgentSettingsViewModel", () => {
         });
     });
 
+    describe("the Anthropic account of the computer", () => {
+        const notConnected = { connected: { claude: false, copilot: false } };
+
+        it("offers the account when Claude is selected and not connected", async () => {
+            await createLoaded(notConnected);
+
+            await vi.waitFor(() => expect(vm.getSnapshot().claudeAccount).toEqual(CLAUDE_ACCOUNT));
+            expect(agent.getCopilotAccount).not.toHaveBeenCalled();
+        });
+
+        it("shows the account Claude is connected with, but doesn't look it up with an API key", async () => {
+            await createLoaded({ connected: { claude: true, copilot: false }, claudeAuth: "account" });
+            await vi.waitFor(() => expect(vm.getSnapshot().claudeAccount).toEqual(CLAUDE_ACCOUNT));
+            expect(vm.getSnapshot().claudeAuth).toBe("account");
+            vm.dispose();
+
+            await createLoaded({ connected: { claude: true, copilot: false }, claudeAuth: "key" });
+            await vi.waitFor(() => expect(vm.getSnapshot().models).toEqual(MODELS));
+            expect(agent.getClaudeAccount).not.toHaveBeenCalled();
+        });
+
+        it("connects Claude with the account", async () => {
+            await createLoaded(notConnected);
+
+            vm.connectClaudeAccount();
+
+            await vi.waitFor(() => expect(vm.getSnapshot().connected.claude).toBe(true));
+            expect(vm.getSnapshot().claudeAuth).toBe("account");
+            await vi.waitFor(() => expect(vm.getSnapshot().models).toEqual(MODELS));
+        });
+
+        it("signs in with the Anthropic CLI and connects Claude with the new account", async () => {
+            await createLoaded(notConnected);
+
+            vm.signInClaude();
+            expect(vm.getSnapshot()).toMatchObject({ isSigningIn: true, isBusy: true });
+
+            await vi.waitFor(() => expect(vm.getSnapshot().isSigningIn).toBe(false));
+            expect(vm.getSnapshot()).toMatchObject({
+                isBusy: false,
+                connected: { claude: true },
+                claudeAuth: "account",
+                claudeAccount: CLAUDE_ACCOUNT,
+            });
+        });
+
+        it("explains a missing Anthropic CLI", async () => {
+            await createLoaded(notConnected);
+            agent.signInClaude.mockResolvedValue({ ok: false, error: "missing_cli" });
+
+            vm.signInClaude();
+
+            await vi.waitFor(() => expect(vm.getSnapshot().error).toBe("missing_cli"));
+            expect(vm.getSnapshot()).toMatchObject({ isSigningIn: false, connected: { claude: false } });
+        });
+
+        it("cancels the sign-in to Anthropic, also when the settings are closed", async () => {
+            await createLoaded(notConnected);
+            agent.signInClaude.mockReturnValue(new Promise(() => {}));
+
+            vm.signInClaude();
+            vm.cancelClaudeSignIn();
+            expect(agent.cancelClaudeSignIn).toHaveBeenCalledTimes(1);
+            vm.dispose();
+
+            expect(agent.cancelClaudeSignIn).toHaveBeenCalledTimes(2);
+            expect(agent.cancelCopilotSignIn).not.toHaveBeenCalled();
+        });
+
+        it("offers the account again after disconnecting Claude", async () => {
+            await createLoaded({ connected: { claude: true, copilot: false }, claudeAuth: "key" });
+
+            vm.disconnect();
+
+            await vi.waitFor(() => expect(vm.getSnapshot().claudeAccount?.signedIn).toBe(true));
+            expect(vm.getSnapshot()).toMatchObject({ connected: { claude: false }, claudeAuth: undefined });
+        });
+    });
+
     describe("toSettingsError", () => {
         it.each([
             ["invalid_credential", "invalid_credential"],
             ["rate_limited", "rate_limited"],
             ["unavailable", "unavailable"],
+            ["missing_cli", "missing_cli"],
             ["refused", "unknown"],
             ["not_connected", "unknown"],
             ["cancelled", undefined],

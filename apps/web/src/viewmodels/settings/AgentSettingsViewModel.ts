@@ -30,6 +30,7 @@ export function toSettingsError(error: AgentErrorCode): AgentSettingsError | und
         case "invalid_credential":
         case "rate_limited":
         case "unavailable":
+        case "missing_cli":
             return error;
         case "cancelled":
             return undefined;
@@ -60,26 +61,37 @@ export class AgentSettingsViewModel
     }
 
     public override dispose(): void {
-        // A sign-in waits for the browser for minutes; nobody would see how it ends once the settings are closed
-        if (this.snapshot.current.isSigningIn) void this.props.agent.cancelCopilotSignIn();
+        // A sign-in waits for the browser for minutes; nobody would see how it ends once the settings are closed.
+        // The provider can't be changed while signing in, so it is the one being signed in to.
+        if (this.snapshot.current.isSigningIn) {
+            if (this.snapshot.current.provider === "claude") void this.props.agent.cancelClaudeSignIn();
+            else void this.props.agent.cancelCopilotSignIn();
+        }
         super.dispose();
     }
 
     private async load(): Promise<void> {
         const status = await this.props.agent.getStatus();
         if (this.isDisposed) return;
-        const { provider, connected, copilotAuth, model, instructions, replySuggestions } = status;
+        const { provider, connected, copilotAuth, claudeAuth, model, instructions, replySuggestions } = status;
         this.snapshot.merge({
             isLoading: false,
             provider,
             connected,
             copilotAuth,
+            claudeAuth,
             model,
             instructions,
             replySuggestions,
         });
         await this.loadModels();
+        await this.loadAccount();
+    }
+
+    /** Read the account of the computer the selected provider could use */
+    private async loadAccount(): Promise<void> {
         await this.loadCopilotAccount();
+        await this.loadClaudeAccount();
     }
 
     /** Read the models of the selected provider, if it is connected */
@@ -112,6 +124,19 @@ export class AgentSettingsViewModel
     }
 
     /**
+     * Read the Anthropic account the Anthropic CLI is signed in to on this computer, when Claude is selected and
+     * could use it. With an API key, Claude runs with that key only, so the account is not looked up.
+     */
+    private async loadClaudeAccount(): Promise<void> {
+        const { provider, connected, claudeAuth } = this.snapshot.current;
+        if (provider !== "claude" || (connected.claude && claudeAuth !== "account")) return;
+        const result = await this.props.agent.getClaudeAccount();
+        if (this.isDisposed) return;
+        // Without the account, Claude can still be signed in or connected with an API key
+        this.snapshot.merge({ claudeAccount: result.ok ? result.data : undefined });
+    }
+
+    /**
      * Run an action of the platform's agent while the controls are disabled.
      * @returns the result, or undefined if the view model was disposed meanwhile
      */
@@ -129,7 +154,7 @@ export class AgentSettingsViewModel
             if (!result?.ok) return;
             this.snapshot.merge({ provider: result.data.provider, model: result.data.model });
             await this.loadModels();
-            await this.loadCopilotAccount();
+            await this.loadAccount();
         })();
     };
 
@@ -140,6 +165,7 @@ export class AgentSettingsViewModel
             if (!result?.ok) return;
             this.snapshot.merge({ connected: { ...this.snapshot.current.connected, [provider]: true } });
             if (provider === "copilot") this.snapshot.merge({ copilotAuth: "token" });
+            else this.snapshot.merge({ claudeAuth: "key" });
             await this.loadModels();
         })();
     };
@@ -177,16 +203,48 @@ export class AgentSettingsViewModel
         void this.props.agent.cancelCopilotSignIn();
     };
 
+    public connectClaudeAccount = (): void => {
+        void (async () => {
+            const result = await this.run(() => this.props.agent.connectClaudeAccount());
+            if (!result?.ok) return;
+            this.snapshot.merge({
+                connected: { ...this.snapshot.current.connected, claude: true },
+                claudeAuth: "account",
+            });
+            await this.loadModels();
+        })();
+    };
+
+    public signInClaude = (): void => {
+        void (async () => {
+            this.snapshot.merge({ isSigningIn: true });
+            const result = await this.run(() => this.props.agent.signInClaude());
+            if (!result) return;
+            this.snapshot.merge({ isSigningIn: false });
+            if (!result.ok) return;
+            this.snapshot.merge({
+                connected: { ...this.snapshot.current.connected, claude: true },
+                claudeAuth: "account",
+                claudeAccount: result.data,
+            });
+            await this.loadModels();
+        })();
+    };
+
+    public cancelClaudeSignIn = (): void => {
+        // The sign-in itself then ends with "cancelled", which resets the state
+        void this.props.agent.cancelClaudeSignIn();
+    };
+
     public disconnect = (): void => {
         const { provider } = this.snapshot.current;
         void (async () => {
             const result = await this.run(() => this.props.agent.disconnect(provider));
             if (!result?.ok) return;
             this.snapshot.merge({ connected: { ...this.snapshot.current.connected, [provider]: false }, models: [] });
-            if (provider === "copilot") {
-                this.snapshot.merge({ copilotAuth: undefined });
-                await this.loadCopilotAccount();
-            }
+            if (provider === "copilot") this.snapshot.merge({ copilotAuth: undefined });
+            else this.snapshot.merge({ claudeAuth: undefined });
+            await this.loadAccount();
         })();
     };
 
