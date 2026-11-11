@@ -19,8 +19,9 @@
 }
 
 .reactionsRowButtonSelected {
-    background-color: var(--cpd-color-purple-300);
-    border-color: var(--cpd-color-purple-800);
+    /* Follows the accent colour the app picks (`--app-accent-*`), purple without one */
+    background-color: var(--app-accent-300, var(--cpd-color-purple-300));
+    border-color: var(--app-accent-800, var(--cpd-color-purple-800));
 }
 
 .reactionsRowButtonDisabled {

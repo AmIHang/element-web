@@ -51,27 +51,27 @@ $username-variant6-color: var(--cpd-color-text-decorative-6);
 /**
  * Creating a `semantic` color scale. This will not be needed with the new
  * visual language, but necessary during the transition period
- * This abstract the `purple` away from where accent shades are used
+ * This abstract the accent palette (`--app-accent-*`, see accent.pcss) away from where accent shades are used
  * Take: `background: rgba($accent, 0.1);`
  * would be transformed to: `background: $accent-300;`
  *
  * To use under very rare circumstances, always prefer the semantics defined
  * in https://compound.element.io/?path=/docs/tokens-semantic-colors--docs
  */
-$accent-100: var(--cpd-color-purple-100);
-$accent-200: var(--cpd-color-purple-200);
-$accent-300: var(--cpd-color-purple-300);
-$accent-400: var(--cpd-color-purple-400);
-$accent-500: var(--cpd-color-purple-500);
-$accent-600: var(--cpd-color-purple-600);
-$accent-700: var(--cpd-color-purple-700);
-$accent-800: var(--cpd-color-purple-800);
-$accent-900: var(--cpd-color-purple-900);
-$accent-1000: var(--cpd-color-purple-1000);
-$accent-1100: var(--cpd-color-purple-1100);
-$accent-1200: var(--cpd-color-purple-1200);
-$accent-1300: var(--cpd-color-purple-1300);
-$accent-1400: var(--cpd-color-purple-1400);
+$accent-100: var(--app-accent-100);
+$accent-200: var(--app-accent-200);
+$accent-300: var(--app-accent-300);
+$accent-400: var(--app-accent-400);
+$accent-500: var(--app-accent-500);
+$accent-600: var(--app-accent-600);
+$accent-700: var(--app-accent-700);
+$accent-800: var(--app-accent-800);
+$accent-900: var(--app-accent-900);
+$accent-1000: var(--app-accent-1000);
+$accent-1100: var(--app-accent-1100);
+$accent-1200: var(--app-accent-1200);
+$accent-1300: var(--app-accent-1300);
+$accent-1400: var(--app-accent-1400);
 
 /* Reused Figma non-compound colors */
 /* ******************** */
@@ -271,7 +271,7 @@ $voice-record-icon-color: $tertiary-content;
 
 /* Bubble tiles */
 /* ******************** */
-$eventbubble-self-bg: var(--cpd-color-purple-300);
+$eventbubble-self-bg: var(--app-accent-300);
 $eventbubble-others-bg: var(--cpd-color-gray-300);
 $eventbubble-bg-hover: var(--cpd-color-bg-subtle-secondary);
 /* ******************** */
@@ -333,8 +333,8 @@ $focus-brightness: 105%;
 /* Location sharing */
 /* ******************** */
 $location-marker-color: var(--cpd-color-icon-on-solid-primary);
-$location-live-color: var(--cpd-color-purple-900);
-$location-live-secondary-color: var(--cpd-color-purple-600);
+$location-live-color: var(--app-accent-900);
+$location-live-secondary-color: var(--app-accent-600);
 /* ******************** */
 
 body {

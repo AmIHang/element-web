@@ -6,47 +6,189 @@ Please see LICENSE files in the repository root for full details.
 */
 
 /*
- * Uses the violet of the app icon as the accent colour instead of Compound's green.
- * Each green shade maps to the purple shade of the same step, so contrast stays as designed in every theme.
+ * Uses the violet of the app icon as the accent colour instead of Compound's green, or the colour the user picked
+ * in the appearance settings (`data-accent` on the root element, see accentColor.ts).
+ * The accent tokens point at the `--app-accent-*` scale, and that scale points at one Compound palette. Every
+ * palette has the same steps, so contrast stays as designed in every theme whichever colour is picked.
  * Success colours (verified, diff additions, …) stay green on purpose: there green means "good", not "brand".
  *
  * Imported into Compound's `custom` layer, which sits above its semantic tokens but below custom themes.
  * No leading underscore, so that rethemendex.sh does not also pull it into the app-web layer.
  */
+
+/* The accent scale has to be set wherever a theme class sets the palettes, so it picks that theme's shades */
 :root,
 [class*="cpd-theme-"] {
-    --cpd-color-text-action-accent: var(--cpd-color-purple-900);
-    --cpd-color-text-badge-accent: var(--cpd-color-purple-1100);
-    --cpd-color-bg-accent-rest: var(--cpd-color-purple-900);
-    --cpd-color-bg-accent-hovered: var(--cpd-color-purple-1000);
-    --cpd-color-bg-accent-pressed: var(--cpd-color-purple-1100);
-    --cpd-color-bg-accent-selected: var(--cpd-color-alpha-purple-300);
-    --cpd-color-bg-accent-subtle: var(--cpd-color-purple-200);
-    --cpd-color-bg-badge-accent: var(--cpd-color-purple-400);
-    --cpd-color-border-accent-subtle: var(--cpd-color-purple-700);
-    --cpd-color-border-accent-primary: var(--cpd-color-purple-900);
-    --cpd-color-icon-accent-tertiary: var(--cpd-color-purple-800);
-    --cpd-color-icon-accent-primary: var(--cpd-color-purple-900);
-    --cpd-color-gradient-subtle-stop1: var(--cpd-color-alpha-purple-500);
-    --cpd-color-gradient-subtle-stop2: var(--cpd-color-alpha-purple-400);
-    --cpd-color-gradient-subtle-stop3: var(--cpd-color-alpha-purple-300);
-    --cpd-color-gradient-subtle-stop4: var(--cpd-color-alpha-purple-200);
-    --cpd-color-gradient-subtle-stop5: var(--cpd-color-alpha-purple-100);
+    --app-accent-100: var(--cpd-color-purple-100);
+    --app-accent-200: var(--cpd-color-purple-200);
+    --app-accent-300: var(--cpd-color-purple-300);
+    --app-accent-400: var(--cpd-color-purple-400);
+    --app-accent-500: var(--cpd-color-purple-500);
+    --app-accent-600: var(--cpd-color-purple-600);
+    --app-accent-700: var(--cpd-color-purple-700);
+    --app-accent-800: var(--cpd-color-purple-800);
+    --app-accent-900: var(--cpd-color-purple-900);
+    --app-accent-1000: var(--cpd-color-purple-1000);
+    --app-accent-1100: var(--cpd-color-purple-1100);
+    --app-accent-1200: var(--cpd-color-purple-1200);
+    --app-accent-1300: var(--cpd-color-purple-1300);
+    --app-accent-1400: var(--cpd-color-purple-1400);
+    --app-accent-alpha-100: var(--cpd-color-alpha-purple-100);
+    --app-accent-alpha-200: var(--cpd-color-alpha-purple-200);
+    --app-accent-alpha-300: var(--cpd-color-alpha-purple-300);
+    --app-accent-alpha-400: var(--cpd-color-alpha-purple-400);
+    --app-accent-alpha-500: var(--cpd-color-alpha-purple-500);
+}
+
+[data-accent="blue"]:root,
+[data-accent="blue"] [class*="cpd-theme-"] {
+    --app-accent-100: var(--cpd-color-blue-100);
+    --app-accent-200: var(--cpd-color-blue-200);
+    --app-accent-300: var(--cpd-color-blue-300);
+    --app-accent-400: var(--cpd-color-blue-400);
+    --app-accent-500: var(--cpd-color-blue-500);
+    --app-accent-600: var(--cpd-color-blue-600);
+    --app-accent-700: var(--cpd-color-blue-700);
+    --app-accent-800: var(--cpd-color-blue-800);
+    --app-accent-900: var(--cpd-color-blue-900);
+    --app-accent-1000: var(--cpd-color-blue-1000);
+    --app-accent-1100: var(--cpd-color-blue-1100);
+    --app-accent-1200: var(--cpd-color-blue-1200);
+    --app-accent-1300: var(--cpd-color-blue-1300);
+    --app-accent-1400: var(--cpd-color-blue-1400);
+    --app-accent-alpha-100: var(--cpd-color-alpha-blue-100);
+    --app-accent-alpha-200: var(--cpd-color-alpha-blue-200);
+    --app-accent-alpha-300: var(--cpd-color-alpha-blue-300);
+    --app-accent-alpha-400: var(--cpd-color-alpha-blue-400);
+    --app-accent-alpha-500: var(--cpd-color-alpha-blue-500);
+}
+
+[data-accent="cyan"]:root,
+[data-accent="cyan"] [class*="cpd-theme-"] {
+    --app-accent-100: var(--cpd-color-cyan-100);
+    --app-accent-200: var(--cpd-color-cyan-200);
+    --app-accent-300: var(--cpd-color-cyan-300);
+    --app-accent-400: var(--cpd-color-cyan-400);
+    --app-accent-500: var(--cpd-color-cyan-500);
+    --app-accent-600: var(--cpd-color-cyan-600);
+    --app-accent-700: var(--cpd-color-cyan-700);
+    --app-accent-800: var(--cpd-color-cyan-800);
+    --app-accent-900: var(--cpd-color-cyan-900);
+    --app-accent-1000: var(--cpd-color-cyan-1000);
+    --app-accent-1100: var(--cpd-color-cyan-1100);
+    --app-accent-1200: var(--cpd-color-cyan-1200);
+    --app-accent-1300: var(--cpd-color-cyan-1300);
+    --app-accent-1400: var(--cpd-color-cyan-1400);
+    --app-accent-alpha-100: var(--cpd-color-alpha-cyan-100);
+    --app-accent-alpha-200: var(--cpd-color-alpha-cyan-200);
+    --app-accent-alpha-300: var(--cpd-color-alpha-cyan-300);
+    --app-accent-alpha-400: var(--cpd-color-alpha-cyan-400);
+    --app-accent-alpha-500: var(--cpd-color-alpha-cyan-500);
+}
+
+[data-accent="green"]:root,
+[data-accent="green"] [class*="cpd-theme-"] {
+    --app-accent-100: var(--cpd-color-green-100);
+    --app-accent-200: var(--cpd-color-green-200);
+    --app-accent-300: var(--cpd-color-green-300);
+    --app-accent-400: var(--cpd-color-green-400);
+    --app-accent-500: var(--cpd-color-green-500);
+    --app-accent-600: var(--cpd-color-green-600);
+    --app-accent-700: var(--cpd-color-green-700);
+    --app-accent-800: var(--cpd-color-green-800);
+    --app-accent-900: var(--cpd-color-green-900);
+    --app-accent-1000: var(--cpd-color-green-1000);
+    --app-accent-1100: var(--cpd-color-green-1100);
+    --app-accent-1200: var(--cpd-color-green-1200);
+    --app-accent-1300: var(--cpd-color-green-1300);
+    --app-accent-1400: var(--cpd-color-green-1400);
+    --app-accent-alpha-100: var(--cpd-color-alpha-green-100);
+    --app-accent-alpha-200: var(--cpd-color-alpha-green-200);
+    --app-accent-alpha-300: var(--cpd-color-alpha-green-300);
+    --app-accent-alpha-400: var(--cpd-color-alpha-green-400);
+    --app-accent-alpha-500: var(--cpd-color-alpha-green-500);
+}
+
+[data-accent="orange"]:root,
+[data-accent="orange"] [class*="cpd-theme-"] {
+    --app-accent-100: var(--cpd-color-orange-100);
+    --app-accent-200: var(--cpd-color-orange-200);
+    --app-accent-300: var(--cpd-color-orange-300);
+    --app-accent-400: var(--cpd-color-orange-400);
+    --app-accent-500: var(--cpd-color-orange-500);
+    --app-accent-600: var(--cpd-color-orange-600);
+    --app-accent-700: var(--cpd-color-orange-700);
+    --app-accent-800: var(--cpd-color-orange-800);
+    --app-accent-900: var(--cpd-color-orange-900);
+    --app-accent-1000: var(--cpd-color-orange-1000);
+    --app-accent-1100: var(--cpd-color-orange-1100);
+    --app-accent-1200: var(--cpd-color-orange-1200);
+    --app-accent-1300: var(--cpd-color-orange-1300);
+    --app-accent-1400: var(--cpd-color-orange-1400);
+    --app-accent-alpha-100: var(--cpd-color-alpha-orange-100);
+    --app-accent-alpha-200: var(--cpd-color-alpha-orange-200);
+    --app-accent-alpha-300: var(--cpd-color-alpha-orange-300);
+    --app-accent-alpha-400: var(--cpd-color-alpha-orange-400);
+    --app-accent-alpha-500: var(--cpd-color-alpha-orange-500);
+}
+
+[data-accent="pink"]:root,
+[data-accent="pink"] [class*="cpd-theme-"] {
+    --app-accent-100: var(--cpd-color-pink-100);
+    --app-accent-200: var(--cpd-color-pink-200);
+    --app-accent-300: var(--cpd-color-pink-300);
+    --app-accent-400: var(--cpd-color-pink-400);
+    --app-accent-500: var(--cpd-color-pink-500);
+    --app-accent-600: var(--cpd-color-pink-600);
+    --app-accent-700: var(--cpd-color-pink-700);
+    --app-accent-800: var(--cpd-color-pink-800);
+    --app-accent-900: var(--cpd-color-pink-900);
+    --app-accent-1000: var(--cpd-color-pink-1000);
+    --app-accent-1100: var(--cpd-color-pink-1100);
+    --app-accent-1200: var(--cpd-color-pink-1200);
+    --app-accent-1300: var(--cpd-color-pink-1300);
+    --app-accent-1400: var(--cpd-color-pink-1400);
+    --app-accent-alpha-100: var(--cpd-color-alpha-pink-100);
+    --app-accent-alpha-200: var(--cpd-color-alpha-pink-200);
+    --app-accent-alpha-300: var(--cpd-color-alpha-pink-300);
+    --app-accent-alpha-400: var(--cpd-color-alpha-pink-400);
+    --app-accent-alpha-500: var(--cpd-color-alpha-pink-500);
+}
+
+:root,
+[class*="cpd-theme-"] {
+    --cpd-color-text-action-accent: var(--app-accent-900);
+    --cpd-color-text-badge-accent: var(--app-accent-1100);
+    --cpd-color-bg-accent-rest: var(--app-accent-900);
+    --cpd-color-bg-accent-hovered: var(--app-accent-1000);
+    --cpd-color-bg-accent-pressed: var(--app-accent-1100);
+    --cpd-color-bg-accent-selected: var(--app-accent-alpha-300);
+    --cpd-color-bg-accent-subtle: var(--app-accent-200);
+    --cpd-color-bg-badge-accent: var(--app-accent-400);
+    --cpd-color-border-accent-subtle: var(--app-accent-700);
+    --cpd-color-border-accent-primary: var(--app-accent-900);
+    --cpd-color-icon-accent-tertiary: var(--app-accent-800);
+    --cpd-color-icon-accent-primary: var(--app-accent-900);
+    --cpd-color-gradient-subtle-stop1: var(--app-accent-alpha-500);
+    --cpd-color-gradient-subtle-stop2: var(--app-accent-alpha-400);
+    --cpd-color-gradient-subtle-stop3: var(--app-accent-alpha-300);
+    --cpd-color-gradient-subtle-stop4: var(--app-accent-alpha-200);
+    --cpd-color-gradient-subtle-stop5: var(--app-accent-alpha-100);
 }
 
 /* The action gradient runs in opposite directions in light and dark themes */
 .cpd-theme-light,
 .cpd-theme-light-hc {
-    --cpd-color-gradient-action-stop1: var(--cpd-color-purple-500);
-    --cpd-color-gradient-action-stop2: var(--cpd-color-purple-700);
-    --cpd-color-gradient-action-stop3: var(--cpd-color-purple-900);
-    --cpd-color-gradient-action-stop4: var(--cpd-color-purple-1100);
+    --cpd-color-gradient-action-stop1: var(--app-accent-500);
+    --cpd-color-gradient-action-stop2: var(--app-accent-700);
+    --cpd-color-gradient-action-stop3: var(--app-accent-900);
+    --cpd-color-gradient-action-stop4: var(--app-accent-1100);
 }
 
 .cpd-theme-dark,
 .cpd-theme-dark-hc {
-    --cpd-color-gradient-action-stop1: var(--cpd-color-purple-1100);
-    --cpd-color-gradient-action-stop2: var(--cpd-color-purple-900);
-    --cpd-color-gradient-action-stop3: var(--cpd-color-purple-700);
-    --cpd-color-gradient-action-stop4: var(--cpd-color-purple-500);
+    --cpd-color-gradient-action-stop1: var(--app-accent-1100);
+    --cpd-color-gradient-action-stop2: var(--app-accent-900);
+    --cpd-color-gradient-action-stop3: var(--app-accent-700);
+    --cpd-color-gradient-action-stop4: var(--app-accent-500);
 }
