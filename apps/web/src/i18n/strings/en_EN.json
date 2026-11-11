@@ -1982,8 +1982,8 @@
         "3pid_invite_error_public_subtitle": "You can still join here.",
         "3pid_invite_error_title": "Something went wrong with your invite.",
         "3pid_invite_error_title_room": "Something went wrong with your invite to %(roomName)s",
-        "agent_replies": "The agent replies in this chat",
         "3pid_invite_no_is_subtitle": "Use an identity server in Settings to receive invites directly in %(brand)s.",
+        "agent_replies": "The agent replies in this chat",
         "banned_by": "You were banned by %(memberName)s",
         "banned_from_room_by": "You were banned from %(roomName)s by %(memberName)s",
         "context_menu": {
@@ -2888,7 +2888,9 @@
             "tokenizer_mode_language": "Language-based",
             "tokenizer_mode_language_description": "Single language support based on your UI language. Only works with some languages (English, German, etc.).",
             "tokenizer_mode_ngram": "N-gram",
-            "tokenizer_mode_ngram_description": "Supports all languages including those without word boundaries. Works with mixed languages."
+            "tokenizer_mode_ngram_description": "Supports all languages including those without word boundaries. Works with mixed languages.",
+            "tokenizer_mode_substring": "Substring",
+            "tokenizer_mode_substring_description": "Finds any part of a word, such as \"deploy\" in \"deployment\" or names in code. Uses more disk space."
         },
         "send_read_receipts": "Send read receipts",
         "send_read_receipts_unsupported": "Your server doesn't support disabling sending read receipts.",
@@ -3828,6 +3830,7 @@
         "downloading": "Downloading update…",
         "error_encountered": "Error encountered (%(errorDetail)s).",
         "error_unable_load_commit": "Unable to load commit detail: %(msg)s",
+        "new_release_toast_description": "%(brand)s %(version)s is available to download.",
         "new_version_available": "New version available. <a>Update now.</a>",
         "no_update": "No update available.",
         "release_notes_toast_title": "What's New",

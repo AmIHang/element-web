@@ -37,6 +37,7 @@ import Store from "./store.js";
 import { buildMenuTemplate } from "./vectormenu.js";
 import webContentsHandler from "./webcontents-handler.js";
 import * as updater from "./updater.js";
+import * as releaseCheck from "./release-check.js";
 import ProtocolHandler from "./protocol.js";
 import { _t, AppLocalization } from "./language-helper.js";
 import { setDisplayMediaCallback } from "./displayMediaCallback.js";
@@ -231,6 +232,8 @@ app.on("ready", async () => {
         console.log("Auto update disabled via command line flag");
     } else if (config.update_base_url) {
         void updater.start(config.update_base_url);
+    } else if (config.release_check_url) {
+        releaseCheck.start(config.release_check_url);
     } else {
         console.log("No update_base_url is defined: auto update is disabled");
     }

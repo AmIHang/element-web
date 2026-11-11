@@ -224,6 +224,11 @@ export interface DesktopConfigJson extends WebConfigJson {
     web_base_url?: string;
     update_base_url?: string;
     /**
+     * GitHub API URL listing the app's releases, such as https://api.github.com/repos/OWNER/REPO/releases. When it is
+     * set and there is no `update_base_url`, the app checks it for a newer release and offers its download page.
+     */
+    release_check_url?: string;
+    /**
      * Configuration for experimental X.509-based identity verification.
      */
     x509?: {

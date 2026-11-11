@@ -28,6 +28,7 @@ const CHANNELS = [
     "seshatReply",
     "setBadgeCount",
     "update-downloaded",
+    "new-release-available",
     "userDownloadCompleted",
     "userDownloadAction",
     "openDesktopCapturerSourcePicker",

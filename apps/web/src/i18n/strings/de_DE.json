@@ -2837,7 +2837,9 @@
             "tokenizer_mode_language": "Sprachbasiert",
             "tokenizer_mode_language_description": "Unterstützung für eine Sprache, basierend auf deiner Anzeigesprache. Funktioniert nur mit bestimmten Sprachen (Englisch, Deutsch usw.).",
             "tokenizer_mode_ngram": "N-Gramm",
-            "tokenizer_mode_ngram_description": "Unterstützt alle Sprachen, auch solche ohne Wortgrenzen. Funktioniert auch bei gemischten Sprachen."
+            "tokenizer_mode_ngram_description": "Unterstützt alle Sprachen, auch solche ohne Wortgrenzen. Funktioniert auch bei gemischten Sprachen.",
+            "tokenizer_mode_substring": "Teilwortsuche",
+            "tokenizer_mode_substring_description": "Findet jeden Teil eines Wortes, etwa „deploy“ in „deployment“ oder Namen in Code. Braucht mehr Speicherplatz."
         },
         "send_read_receipts": "Sende Lesebestätigungen",
         "send_read_receipts_unsupported": "Dein Server unterstützt das Deaktivieren von Lesebestätigungen nicht.",
@@ -3750,6 +3752,7 @@
         "error_encountered": "Es ist ein Fehler aufgetreten (%(errorDetail)s).",
         "error_unable_load_commit": "Konnte Übermittlungsdetails nicht laden: %(msg)s",
         "new_version_available": "Neue Version verfügbar. <a>Jetzt aktualisieren.</a>",
+        "new_release_toast_description": "%(brand)s %(version)s steht zum Herunterladen bereit.",
         "no_update": "Keine Aktualisierung verfügbar.",
         "release_notes_toast_title": "Was ist neu",
         "see_changes_button": "Was ist neu?",

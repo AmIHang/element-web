@@ -25,6 +25,7 @@ import Modal from "../../Modal";
 import DesktopCapturerSourcePicker from "../../components/views/elements/DesktopCapturerSourcePicker";
 import ElectronPlatform from "./ElectronPlatform";
 import ToastStore from "../../stores/ToastStore.ts";
+import PlatformPeg from "../../PlatformPeg";
 
 vi.mock("../../rageshake/rageshake", () => ({
     flush: vi.fn(),
@@ -189,6 +190,46 @@ describe("ElectronPlatform", () => {
             const platform = tearDownAfterTest(new ElectronPlatform());
             platform.installUpdate();
             expect(mockElectron.send).toHaveBeenCalledWith("install_update");
+        });
+
+        describe("new release available", () => {
+            const release = { version: "1.2.0", url: "https://github.com/owner/repo/releases/tag/pilot/v1.2.0" };
+
+            afterEach(() => {
+                localStorage.removeItem("mx_defer_update");
+            });
+
+            const showToast = (): Parameters<ToastStore["addOrReplaceToast"]>[0] => {
+                const spy = vi.spyOn(ToastStore.sharedInstance(), "addOrReplaceToast");
+                // The toast's buttons defer the update through the platform
+                PlatformPeg.set(tearDownAfterTest(new ElectronPlatform()));
+                const [, handler] = getElectronEventHandlerCall("new-release-available")!;
+                handler({}, release);
+                expect(spy).toHaveBeenCalledTimes(1);
+                return spy.mock.calls[0][0];
+            };
+
+            it("shows a toast that opens the release page", () => {
+                const openSpy = vi.spyOn(window, "open").mockReturnValue(null);
+                const toast = showToast();
+                expect(toast.props).toEqual(expect.objectContaining({ description: expect.stringContaining("1.2.0") }));
+
+                (toast.props as { onPrimaryClick: () => void }).onPrimaryClick();
+                expect(openSpy).toHaveBeenCalledWith(release.url, "_blank", "noreferrer noopener");
+                openSpy.mockRestore();
+            });
+
+            it("doesn't show the toast again once it was dismissed", () => {
+                const toast = showToast();
+                (toast.props as { onSecondaryClick: () => void }).onSecondaryClick();
+
+                const spy = vi.spyOn(ToastStore.sharedInstance(), "addOrReplaceToast");
+                spy.mockClear();
+                tearDownAfterTest(new ElectronPlatform());
+                const [, handler] = getElectronEventHandlerCall("new-release-available")!;
+                handler({}, release);
+                expect(spy).not.toHaveBeenCalled();
+            });
         });
     });
 

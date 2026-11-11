@@ -76,6 +76,33 @@ export const showToast = (version: string, newVersion: string, releaseNotes?: st
     });
 };
 
+/**
+ * Shows that a newer version can be downloaded, for builds that can't update themselves. It replaces the toast of
+ * {@link showToast}, so that deferring the update hides either.
+ * @param newVersion the version that is available
+ * @param downloadUrl the page the installer can be downloaded from
+ */
+export const showNewReleaseToast = (newVersion: string, downloadUrl: string): void => {
+    const brand = SdkConfig.get().brand;
+    ToastStore.sharedInstance().addOrReplaceToast({
+        key: TOAST_KEY,
+        title: _t("update|toast_title", { brand }),
+        props: {
+            description: _t("update|new_release_toast_description", { brand, version: newVersion }),
+            primaryLabel: _t("action|download"),
+            onPrimaryClick: () => {
+                window.open(downloadUrl, "_blank", "noreferrer noopener");
+                // Don't ask again about this version until tomorrow, by when it is likely installed
+                PlatformPeg.get()?.deferUpdate(newVersion);
+            },
+            secondaryLabel: _t("action|dismiss"),
+            onSecondaryClick: () => PlatformPeg.get()?.deferUpdate(newVersion),
+        },
+        component: GenericToast,
+        priority: 20,
+    });
+};
+
 export const hideToast = (): void => {
     ToastStore.sharedInstance().dismissToast(TOAST_KEY);
 };

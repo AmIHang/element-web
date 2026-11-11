@@ -32,7 +32,7 @@ import InfoDialog from "../../components/views/dialogs/InfoDialog";
 import Spinner from "../../components/views/elements/Spinner";
 import { Action } from "../../dispatcher/actions";
 import { type ActionPayload } from "../../dispatcher/payloads";
-import { showToast as showUpdateToast } from "../../toasts/UpdateToast";
+import { showToast as showUpdateToast, showNewReleaseToast } from "../../toasts/UpdateToast";
 import { type CheckUpdatesPayload } from "../../dispatcher/payloads/CheckUpdatesPayload";
 import ToastStore from "../../stores/ToastStore";
 import GenericExpiringToast from "../../components/views/toasts/GenericExpiringToast";
@@ -149,6 +149,7 @@ export default class ElectronPlatform extends BasePlatform {
         });
 
         this.electron.on("update-downloaded", this.onUpdateDownloaded);
+        this.electron.on("new-release-available", this.onNewReleaseAvailable);
 
         this.electron.on("preferences", () => {
             dis.fire(Action.ViewUserSettings);
@@ -272,6 +273,13 @@ export default class ElectronPlatform extends BasePlatform {
         });
         if (this.shouldShowUpdate(releaseName)) {
             showUpdateToast(await this.getAppVersion(), releaseName, releaseNotes);
+        }
+    };
+
+    /** Builds that can't update themselves are told by the main process when a newer release can be downloaded. */
+    private onNewReleaseAvailable = (ev: Event, { version, url }: { version: string; url: string }): void => {
+        if (this.shouldShowUpdate(version)) {
+            showNewReleaseToast(version, url);
         }
     };
 

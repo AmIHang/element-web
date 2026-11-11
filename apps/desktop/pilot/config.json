@@ -9,6 +9,7 @@
         }
     },
     "brand": "Element Pilot",
+    "release_check_url": "https://api.github.com/repos/AmIHang/element-web/releases",
     "integrations_ui_url": "https://scalar.vector.im/",
     "integrations_rest_url": "https://scalar.vector.im/api",
     "integrations_widgets_urls": [
