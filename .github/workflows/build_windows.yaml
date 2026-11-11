@@ -1,10 +1,10 @@
 # Builds the Element Pilot Windows client from this repository: the web app in apps/web is built and bundled
 # into apps/desktop, rather than fetching an upstream Element Web release. The installers are not code signed.
-# Pushing a pilot/v<version> tag (see `pnpm release:pilot`) also publishes the installers as a GitHub release.
+# It runs for pilot/v<version> tags (see `pnpm release:pilot`), publishing the installers as a GitHub release, and
+# when started by hand. Pushes to branches don't build.
 name: Build Windows client
 on:
     push:
-        branches: [develop]
         tags: ["pilot/v*"]
     workflow_dispatch:
         inputs:

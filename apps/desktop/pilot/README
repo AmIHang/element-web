@@ -35,5 +35,6 @@ To release, from apps/desktop:
     git push origin HEAD pilot/v<version>
 
 The first sets the version, commits build.json and tags the commit pilot/v<version>. Pushing the tag builds the
-installers and publishes them as a GitHub release. Builds of develop are numbered after the last release,
-<next patch>-dev.<run number>, and only uploaded as workflow artifacts.
+installers and publishes them as a GitHub release. Pushes to develop don't build anything; a build started by hand
+in the Actions tab is numbered after the last release, <next patch>-dev.<run number>, and only uploaded as a workflow
+artifact.

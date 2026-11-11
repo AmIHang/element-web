@@ -1,8 +1,7 @@
 name: Tests
 on:
+    # Pushes to develop don't run the tests; pull requests do
     pull_request: {}
-    push:
-        branches: [develop]
     workflow_dispatch: {}
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}

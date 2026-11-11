@@ -1,8 +1,7 @@
 name: Static Analysis
 on:
+    # Pushes to develop don't run the checks; pull requests do
     pull_request: {}
-    push:
-        branches: [develop]
     workflow_dispatch: {}
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
