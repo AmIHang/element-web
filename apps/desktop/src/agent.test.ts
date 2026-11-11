@@ -9,7 +9,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import os from "node:os";
 import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
-import { app, shell } from "electron";
+import { app } from "electron";
 import { AuthenticationError, RateLimitError } from "@anthropic-ai/sdk";
 import type { AgentReplyRequest, AgentSuggestionsRequest } from "shared-types";
 
@@ -59,7 +59,7 @@ const { storeData, storeOptions, safeStorage, shell, anthropic, copilot, getCopi
                 encryptString: vi.fn((text: string) => Buffer.from(`encrypted:${text}`)),
                 decryptString: vi.fn((buffer: Buffer) => buffer.toString().replace(/^encrypted:/, "")),
             },
-            shell: { openExternal: vi.fn(async () => {}) },
+            shell: { openExternal: vi.fn(async () => {}), openPath: vi.fn(async () => "") },
             anthropic: {
                 options: [] as unknown[],
                 modelsList: vi.fn(),
@@ -91,7 +91,7 @@ const { storeData, storeOptions, safeStorage, shell, anthropic, copilot, getCopi
 vi.mock("electron", () => ({
     app: { getPath: vi.fn(() => "/roaming/Element") },
     safeStorage,
-    shell: Object.assign(shell, { openPath: vi.fn(async () => "") }),
+    shell,
 }));
 vi.mock("electron-store", () => ({
     default: vi.fn(function (this: Record<string, unknown>, options: unknown) {
