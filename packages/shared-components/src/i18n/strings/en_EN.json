@@ -283,6 +283,15 @@
         "unread_messages": "Unread messages"
     },
     "settings": {
+        "accent_color": {
+            "blue": "Blue",
+            "cyan": "Cyan",
+            "green": "Green",
+            "label": "Accent colour",
+            "orange": "Orange",
+            "pink": "Pink",
+            "purple": "Purple"
+        },
         "agent": {
             "connect": "Connect",
             "connected_claude": "Connected to Claude",

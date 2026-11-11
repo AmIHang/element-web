@@ -1,0 +1,70 @@
+/*
+ * Copyright 2026 Element Creations Ltd.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
+ * Please see LICENSE files in the repository root for full details.
+ */
+
+.picker {
+    padding-block: var(--cpd-space-1x);
+}
+
+.option {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+}
+
+/* The radio stays in the page for keyboard and screen readers; the swatch is what is seen */
+.input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.swatch {
+    box-sizing: border-box;
+    inline-size: var(--cpd-space-8x);
+    block-size: var(--cpd-space-8x);
+    border-radius: 50%;
+    background-color: var(--swatch-color);
+}
+
+/* A gap in the page colour between the swatch and its ring, so the ring reads next to every colour */
+.input:checked + .swatch {
+    box-shadow:
+        0 0 0 2px var(--cpd-color-bg-canvas-default),
+        0 0 0 4px var(--cpd-color-border-interactive-primary);
+}
+
+.input:focus-visible + .swatch {
+    outline: 2px solid var(--cpd-color-border-focused);
+    outline-offset: 4px;
+}
+
+/* Step 900 is the step the accent buttons use, so the swatch shows the colour as it will look */
+.purple {
+    --swatch-color: var(--cpd-color-purple-900);
+}
+
+.blue {
+    --swatch-color: var(--cpd-color-blue-900);
+}
+
+.cyan {
+    --swatch-color: var(--cpd-color-cyan-900);
+}
+
+.green {
+    --swatch-color: var(--cpd-color-green-900);
+}
+
+.orange {
+    --swatch-color: var(--cpd-color-orange-900);
+}
+
+.pink {
+    --swatch-color: var(--cpd-color-pink-900);
+}
