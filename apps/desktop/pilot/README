@@ -29,12 +29,17 @@ kept as the Element version it is based on. Versions are major.minor.patch, with
 - minor: new features, and every merge of a newer Element,
 - patch: only fixes.
 
-To release, from apps/desktop:
+Releases are only made on a release branch, release/pilot-<version>, never on develop. To release, from apps/desktop
+on the commit to release (develop for a major or minor release, the release branch being fixed for a patch):
 
     pnpm release:pilot <major|minor|patch|1.2.3|1.2.3-beta.1>
-    git push origin HEAD pilot/v<version>
+    git push origin release/pilot-<version>
+    git push origin pilot/v<version>
 
-The first sets the version, commits build.json and tags the commit pilot/v<version>. Pushing the tag builds the
-installers and publishes them as a GitHub release. Pushes to develop don't build anything; a build started by hand
+The first creates the branch release/pilot-<version>, sets the version there, commits build.json and tags the commit
+pilot/v<version>. Push the branch and the tag one after the other: pushing the tag builds the installers and
+publishes them as a GitHub release, and a tag pushed together with its branch did not start the build. Don't create
+the GitHub release by hand; the build fails if a release for the tag already exists. Fixes made on a release branch
+are merged back into develop. Pushes to develop don't build anything; a build started by hand
 in the Actions tab is numbered after the last release, <next patch>-dev.<run number>, and only uploaded as a workflow
 artifact.

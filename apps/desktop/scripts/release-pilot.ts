@@ -7,8 +7,9 @@ Please see LICENSE in the repository root for full details.
 */
 
 /*
- * Starts an Element Pilot release: sets the new version in pilot/build.json, commits it and tags the commit
- * `pilot/v<version>`. Pushing the tag builds the release.
+ * Starts an Element Pilot release: creates the release branch `release/pilot-<version>` from the current commit,
+ * sets the new version in pilot/build.json there, commits it and tags the commit `pilot/v<version>`. Pushing the
+ * tag builds the release.
  *
  *     pnpm release:pilot <major|minor|patch|1.2.3|1.2.3-beta.1>
  */
@@ -33,6 +34,10 @@ async function main(args: string[]): Promise<number> {
     const current = await readPilotVersion();
     const version = bumpVersion(current, bump);
     const tag = `${TAG_PREFIX}${version}`;
+    const branch = `release/pilot-${version}`;
+
+    // Releases are only made on a release branch of their own, never on develop
+    git("switch", "-c", branch);
 
     // Replace only the version, so the rest of the file keeps its formatting
     const variant = await fs.readFile(VARIANT_FILE, "utf8");
@@ -42,8 +47,9 @@ async function main(args: string[]): Promise<number> {
     git("commit", "-m", `Release Element Pilot ${version}`, "--", VARIANT_FILE);
     git("tag", "-a", tag, "-m", `Element Pilot ${version}`);
 
-    console.log(`Element Pilot ${current} -> ${version}, tagged ${tag}. Build the release by pushing it:`);
-    console.log(`    git push origin HEAD ${tag}`);
+    console.log(`Element Pilot ${current} -> ${version} on ${branch}, tagged ${tag}. Push the branch, then the tag:`);
+    console.log(`    git push origin ${branch}`);
+    console.log(`    git push origin ${tag}`);
     return 0;
 }
 
