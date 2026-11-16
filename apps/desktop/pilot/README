@@ -39,7 +39,8 @@ on the commit to release (develop for a major or minor release, the release bran
 The first creates the branch release/pilot-<version>, sets the version there, commits build.json and tags the commit
 pilot/v<version>. Push the branch and the tag one after the other: pushing the tag builds the installers and
 publishes them as a GitHub release, and a tag pushed together with its branch did not start the build. Don't create
-the GitHub release by hand; the build fails if a release for the tag already exists. Fixes made on a release branch
+the GitHub release by hand: a tag whose release already exists is not built again, so to build a release again,
+delete it on GitHub first and then push its tag again. Fixes made on a release branch
 are merged back into develop. Pushes to develop don't build anything; a build started by hand
 in the Actions tab is numbered after the last release, <next patch>-dev.<run number>, and only uploaded as a workflow
 artifact.
