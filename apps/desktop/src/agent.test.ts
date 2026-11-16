@@ -24,6 +24,8 @@ import {
     buildSummaryPrompt,
     buildSummarySystemPrompt,
     buildSystemPrompt,
+    buildTodoPrompt,
+    buildTodoSystemPrompt,
     cancelClaudeSignIn,
     cancelCopilotSignIn,
     connectAgent,
@@ -47,6 +49,7 @@ import {
     MAX_MESSAGE_INSTRUCTION_LENGTH,
     openContactInstructions,
     parseSuggestions,
+    parseTodo,
     setAgentReplyMarking,
     setAgentRoom,
     setAgentSettings,
@@ -165,6 +168,12 @@ const claudeConfig = {
     authentication: { type: "user_oauth" as const, credentials_path: "/anthropic/credentials/default.json" },
 };
 
+const { addBrsOrganizerTodo, hasBrsOrganizer } = vi.hoisted(() => ({
+    addBrsOrganizerTodo: vi.fn(async () => true),
+    hasBrsOrganizer: vi.fn(() => false),
+}));
+vi.mock("./brs-organizer.js", () => ({ addBrsOrganizerTodo, hasBrsOrganizer }));
+
 const request: AgentReplyRequest = {
     ownName: "Alice",
     partnerName: "Bob",
@@ -222,6 +231,7 @@ describe("agent", () => {
         anthropic.options.length = 0;
         copilot.options.length = 0;
         getCopilotRuntimePath.mockReturnValue(undefined);
+        hasBrsOrganizer.mockReturnValue(false);
         copilot.createSession.mockResolvedValue({
             sessionId: "session-1",
             sendAndWait: copilot.sendAndWait,
@@ -372,6 +382,33 @@ describe("agent", () => {
             expect(params.model).toBe("claude-haiku-4-5");
             expect(params).not.toHaveProperty("output_config");
             expect(params).not.toHaveProperty("fallbacks");
+        });
+
+        it("adds a new task of the partner to BRSOrganizer beside the reply", async () => {
+            hasBrsOrganizer.mockReturnValue(true);
+            anthropic.messagesCreate.mockImplementation(async ({ system }: { system: string }) => ({
+                stop_reason: "end_turn",
+                content: [
+                    {
+                        type: "text",
+                        text: system.startsWith("You keep the todo list")
+                            ? '{"todo": {"title": "Plan tomorrow", "notes": "Bob asks"}}'
+                            : "Yes",
+                    },
+                ],
+            }));
+
+            expect(await generateAgentReply(request)).toEqual({ ok: true, data: "Yes" });
+
+            expect(anthropic.messagesCreate).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    system: buildTodoSystemPrompt(request),
+                    messages: [{ role: "user", content: buildTodoPrompt(request) }],
+                }),
+            );
+            await vi.waitFor(() =>
+                expect(addBrsOrganizerTodo).toHaveBeenCalledWith({ title: "Plan tomorrow", notes: "Bob asks" }),
+            );
         });
 
         it("reports a refusal instead of sending an empty reply", async () => {
@@ -1125,6 +1162,61 @@ describe("agent", () => {
             expect(anthropic.messagesCreate.mock.calls[0][0].system).toContain("for the chat with Team");
             expect(anthropic.messagesCreate.mock.calls[0][0].system).toMatch(/\nBe formal\.$/);
             expect(anthropic.messagesCreate.mock.calls[1][0].system).not.toContain("Be formal.");
+        });
+    });
+
+    describe("parseTodo", () => {
+        it("reads the todo out of the answer", () => {
+            expect(parseTodo('Sure: {"todo": {"title": " Send the offer ", "notes": "by Friday"}}')).toEqual({
+                title: "Send the offer",
+                notes: "by Friday",
+            });
+        });
+
+        it.each([
+            ["BRS_PWg0127", "148082", "BRS_PWg0127", "148082"],
+            [
+                "https://bsm.boomsoftware.com/indication/BRS_PWg0127",
+                "https://otma.boomsoftware.com/ap/148082",
+                "https://bsm.boomsoftware.com/indication/BRS_PWg0127",
+                "https://otma.boomsoftware.com/ap/148082",
+            ],
+            ["Ticket BRS_PWg0127", "OTMA 148082", undefined, undefined],
+            ["https://evil.example/indication/X1", null, undefined, undefined],
+        ])("keeps the tickets %j and %j only in a form BRSOrganizer takes", (bsm, otma, bsmUrl, otmaUrl) => {
+            expect(parseTodo(JSON.stringify({ todo: { title: "Fix it", bsm, otma } }))).toEqual({
+                title: "Fix it",
+                notes: undefined,
+                bsmUrl,
+                otmaUrl,
+            });
+        });
+
+        it.each(['{"todo": null}', '{"todo": {"title": " "}}', "No task", "{not json}"])(
+            "finds no todo in %j",
+            (text) => {
+                expect(parseTodo(text)).toBeUndefined();
+            },
+        );
+    });
+
+    describe("buildTodoPrompt", () => {
+        it("lists the partner's messages since the user's last one as new", () => {
+            const turns = [
+                { role: "user" as const, text: "Hi" },
+                { role: "assistant" as const, text: "Hello" },
+                { role: "user" as const, text: "Can you send the offer?" },
+            ];
+            expect(buildTodoPrompt({ ...request, turns })).toBe(
+                [
+                    "The conversation so far, oldest message first:",
+                    "Bob: Hi",
+                    "Alice: Hello",
+                    "",
+                    "The new messages of Bob:",
+                    "Bob: Can you send the offer?",
+                ].join("\n"),
+            );
         });
     });
 
